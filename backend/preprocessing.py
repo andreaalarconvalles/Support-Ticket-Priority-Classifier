@@ -11,14 +11,17 @@ PLACEHOLDER_PATTERN = re.compile(r"\{[a-z_]+\}")
 
 
 def fill_product_placeholder(description: str, product: str) -> str:
-    """Replace the literal '{product_purchased}' token with the real product name.
+    """Replace the literal 'product_purchased' token with the real product name.
 
     The raw dataset is template-generated and every row has at least one unfilled
     placeholder (see backend/eda.ipynb, section 4b) - the most common by far is
     '{product_purchased}', which has the real value sitting in the Product Purchased
-    column of the same row.
+    column of the same row. Matches on the bare word rather than requiring both braces,
+    since ~2% of rows have a malformed version with one or both braces missing
+    (e.g. 'product_purchased}' or bare 'product_purchased') - any leftover braces get
+    stripped separately in strip_unfilled_placeholders.
     """
-    return description.replace("{product_purchased}", product)
+    return description.replace("product_purchased", product)
 
 
 def strip_unfilled_placeholders(description: str) -> str:
