@@ -8,12 +8,23 @@ A deep learning MVP that automatically classifies incoming customer support tick
 
 | | |
 |---|---|
-| Backend model | Bidirectional LSTM (Keras / TensorFlow), text → priority + department |
+| Backend model | Bidirectional LSTM (Keras / TensorFlow), text → priority |
+| Department routing | Plain lookup from `Ticket Type` (see `backend/department_mapping.py`) — not a model output, since `Ticket Type` is already known per ticket |
 | Backend serving | FastAPI `/predict` endpoint |
 | Frontend | Streamlit app |
 | Dataset | [Customer Support Ticket Dataset](https://www.kaggle.com/datasets/muqaddasejaz/customer-support-ticket-dataset) (Kaggle) — 8,469 tickets, balanced across 4 priority classes |
 
 > Note: the original project brief referenced a different 50K-row Kaggle dataset. The team switched to the dataset above since it already matches the required schema (ticket text + 4-class priority) and is cleanly balanced.
+
+## Key data findings (from EDA)
+
+- Priority classes are well balanced (~2,000–2,200 tickets each) — no resampling needed.
+- 95th-percentile description length is **57 words** → use this for `MAX_SEQ_LEN`.
+- **100% of descriptions** contain at least one unfilled `{placeholder}` token (this dataset is template-generated). `backend/preprocessing.py` fills `product_purchased` with the real product name and strips everything else (no real value to substitute, including malformed/unmatched braces).
+- ~4.6% exact-duplicate descriptions — dedupe across train/val/test splits before training to avoid leakage.
+- No `department` column exists; resolved as a `Ticket Type` → department lookup (see table below), not a second model output.
+
+See `backend/eda.ipynb` for the full analysis with charts.
 
 ## Team
 
@@ -27,15 +38,18 @@ A deep learning MVP that automatically classifies incoming customer support tick
 
 ```
 backend/
-  data/raw/              # downloaded dataset (customer_support_tickets.csv)
-  download_data.py       # pulls dataset from Kaggle via kagglehub
-  models/                # trained model + tokenizer land here (Git LFS)
+  data/raw/                  # downloaded dataset (customer_support_tickets.csv)
+  download_data.py           # pulls dataset from Kaggle via kagglehub
+  eda.ipynb                  # class distribution, text length, label quality checks
+  preprocessing.py           # text cleaning (placeholder fill/strip); tokenize/pad/split still to come
+  department_mapping.py      # Ticket Type -> department lookup
+  models/                    # trained model + tokenizer land here (Git LFS)
   requirements.txt
 frontend/
   requirements.txt
 ```
 
-`backend/eda.ipynb`, `backend/preprocessing.py`, `backend/model_training.ipynb`, `backend/api.py`, and `frontend/app.py` are still to come (see Status below).
+`backend/model_training.ipynb`, `backend/api.py`, and `frontend/app.py` are still to come (see Status below).
 
 ## Setup
 
@@ -59,15 +73,26 @@ Fixed on Day 1 so backend and frontend can be built in parallel:
 {
   "priority": "Critical",
   "confidence": {"Low": 0.02, "Medium": 0.05, "High": 0.11, "Critical": 0.82},
-  "department": "Incident Response"
+  "department": "Technical Support"
 }
 ```
+
+`department` values come from this lookup (`backend/department_mapping.py`):
+
+| Ticket Type | → Department |
+|---|---|
+| Technical issue | Technical Support |
+| Billing inquiry | Billing |
+| Refund request | Billing |
+| Cancellation request | Customer Retention |
+| Product inquiry | Sales |
 
 ## Status
 
 - [x] Repo structure, environment, dataset download
-- [ ] EDA (class distribution, text length, label quality)
-- [ ] Preprocessing pipeline (clean/tokenize/pad) + tokenizer handoff
+- [x] EDA (class distribution, text length, label quality)
+- [x] Department routing resolved (`Ticket Type` lookup, not a model output)
+- [ ] Preprocessing: text cleaning done; tokenize/pad/split + tokenizer handoff still to come
 - [ ] Bi-LSTM model training & evaluation (accuracy, Macro F1, confusion matrix)
 - [ ] FastAPI `/predict` endpoint (mock → real model)
 - [ ] Streamlit frontend + end-to-end integration
