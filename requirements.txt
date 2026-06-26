@@ -1,0 +1,13 @@
+pandas
+kagglehub
+polars
+scikit-learn
+keras
+tensorflow
+numpy
+matplotlib
+seaborn
+datetime
+pathlib
+numpy
+streamlit
