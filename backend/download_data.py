@@ -7,8 +7,8 @@ path = kagglehub.dataset_download("muqaddasejaz/customer-support-ticket-dataset"
 
 print("Path to dataset files:", path)
 
-# Define destination directory
-dest_dir = Path("data/raw")
+# Define destination directory (relative to this script, so it works from any cwd)
+dest_dir = Path(__file__).parent / "data" / "raw"
 dest_dir.mkdir(parents=True, exist_ok=True)
 
 print(f"Copying files to {dest_dir}...")

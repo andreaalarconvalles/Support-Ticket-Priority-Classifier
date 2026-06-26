@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.DS_Store
+.ipynb_checkpoints/
+venv/
+.venv/
+
+# trained model artifacts (track via Git LFS instead, per project guide)
+backend/models/*.keras
+backend/models/*.pkl
