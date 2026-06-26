@@ -30,6 +30,10 @@ def strip_unfilled_placeholders(description: str) -> str:
     variants found in eda.ipynb, not just these two.
     """
     description = PLACEHOLDER_PATTERN.sub("", description)
+    # ~4.7% of rows have a malformed/truncated placeholder with no matching brace
+    # (e.g. "{product_purch" cut off mid-word, or a stray lone "}"). Drop the leftover
+    # brace character itself; the truncated word fragment stays as harmless plain text.
+    description = description.replace("{", "").replace("}", "")
     return re.sub(r"\s{2,}", " ", description).strip()
 
 
@@ -47,12 +51,12 @@ def clean_descriptions(df: pd.DataFrame) -> pd.DataFrame:
 if __name__ == "__main__":
     df = pd.read_csv("data/raw/customer_support_tickets.csv")
 
-    before = df["Ticket Description"].str.contains(PLACEHOLDER_PATTERN).sum()
+    before = df["Ticket Description"].str.contains(r"[{}]").sum()
     df = clean_descriptions(df)
-    after = df["Ticket Description"].str.contains(PLACEHOLDER_PATTERN).sum()
+    after = df["Ticket Description"].str.contains(r"[{}]").sum()
 
-    print(f"Rows with any literal '{{placeholder}}' before cleaning: {before}")
-    print(f"Rows with any literal '{{placeholder}}' after cleaning:  {after}")
+    print(f"Rows with any '{{' or '}}' character before cleaning: {before}")
+    print(f"Rows with any '{{' or '}}' character after cleaning:  {after}")
     print()
     print("Example:")
     print(df.loc[0, "Ticket Description"])
