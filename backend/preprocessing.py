@@ -3,11 +3,28 @@
 Phase 3 (Person 2 support / Juan Jose ML): clean -> tokenise -> pad -> encode labels.
 """
 
+import pickle
 import re
+from pathlib import Path
 
+import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.text import Tokenizer
 
 PLACEHOLDER_PATTERN = re.compile(r"\{[a-z_]+\}")
+
+# 95th-percentile word count from eda.ipynb section 3 - covers the vast majority of
+# tickets without padding everything out to the (rare) 63-word max.
+MAX_SEQ_LEN = 57
+
+# Fixed order matches the API contract's `confidence` object (Low/Medium/High/Critical),
+# not alphabetical - makes the encoding human-readable as an ordinal priority scale.
+LABEL_TO_ID = {"Low": 0, "Medium": 1, "High": 2, "Critical": 3}
+
+DATA_DIR = Path(__file__).parent / "data"
+PROCESSED_DIR = DATA_DIR / "processed"
 
 
 def fill_product_placeholder(description: str, product: str) -> str:
@@ -51,15 +68,87 @@ def clean_descriptions(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-if __name__ == "__main__":
-    df = pd.read_csv("data/raw/customer_support_tickets.csv")
+def drop_duplicate_descriptions(df: pd.DataFrame) -> pd.DataFrame:
+    """Drop exact-duplicate ticket descriptions (~4.6% of rows, see eda.ipynb 4a).
 
-    before = df["Ticket Description"].str.contains(r"[{}]").sum()
+    Must happen before the train/val/test split, otherwise the same exact string
+    could land in both train and test - trivial leakage that inflates eval metrics.
+    """
+    return df.drop_duplicates(subset="Ticket Description", keep="first").reset_index(drop=True)
+
+
+def split_data(df: pd.DataFrame, val_size=0.15, test_size=0.15, random_state=42):
+    """Stratified 70/15/15 train/val/test split on Ticket Priority."""
+    train_df, rest_df = train_test_split(
+        df,
+        test_size=val_size + test_size,
+        stratify=df["Ticket Priority"],
+        random_state=random_state,
+    )
+    val_df, test_df = train_test_split(
+        rest_df,
+        test_size=test_size / (val_size + test_size),
+        stratify=rest_df["Ticket Priority"],
+        random_state=random_state,
+    )
+    return train_df, val_df, test_df
+
+
+def encode_labels(priorities: pd.Series) -> np.ndarray:
+    return priorities.map(LABEL_TO_ID).to_numpy()
+
+
+def run_pipeline():
+    """Clean -> dedupe -> split -> tokenize -> pad -> encode labels -> save artifacts."""
+    df = pd.read_csv(DATA_DIR / "raw" / "customer_support_tickets.csv")
     df = clean_descriptions(df)
-    after = df["Ticket Description"].str.contains(r"[{}]").sum()
+    df = drop_duplicate_descriptions(df)
 
-    print(f"Rows with any '{{' or '}}' character before cleaning: {before}")
-    print(f"Rows with any '{{' or '}}' character after cleaning:  {after}")
-    print()
-    print("Example:")
-    print(df.loc[0, "Ticket Description"])
+    train_df, val_df, test_df = split_data(df)
+
+    tokenizer = Tokenizer(oov_token="<OOV>")
+    tokenizer.fit_on_texts(train_df["Ticket Description"])
+    vocab_size = len(tokenizer.word_index) + 1  # +1 since index 0 is reserved for padding
+
+    def to_padded(texts):
+        sequences = tokenizer.texts_to_sequences(texts)
+        return pad_sequences(sequences, maxlen=MAX_SEQ_LEN, padding="post", truncating="post")
+
+    X_train = to_padded(train_df["Ticket Description"])
+    X_val = to_padded(val_df["Ticket Description"])
+    X_test = to_padded(test_df["Ticket Description"])
+
+    y_train = encode_labels(train_df["Ticket Priority"])
+    y_val = encode_labels(val_df["Ticket Priority"])
+    y_test = encode_labels(test_df["Ticket Priority"])
+
+    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    np.save(PROCESSED_DIR / "X_train.npy", X_train)
+    np.save(PROCESSED_DIR / "X_val.npy", X_val)
+    np.save(PROCESSED_DIR / "X_test.npy", X_test)
+    np.save(PROCESSED_DIR / "y_train.npy", y_train)
+    np.save(PROCESSED_DIR / "y_val.npy", y_val)
+    np.save(PROCESSED_DIR / "y_test.npy", y_test)
+
+    with open(PROCESSED_DIR / "tokenizer.pkl", "wb") as f:
+        pickle.dump(tokenizer, f)
+
+    notes = (
+        "Handoff notes for Juan Jose (Phase 4-6)\n"
+        "========================================\n"
+        f"VOCAB_SIZE  = {vocab_size}\n"
+        f"MAX_SEQ_LEN = {MAX_SEQ_LEN}\n"
+        f"NUM_CLASSES = {len(LABEL_TO_ID)}\n"
+        f"LABEL_TO_ID = {LABEL_TO_ID}\n"
+        f"\nSplit sizes (train/val/test): {len(train_df)} / {len(val_df)} / {len(test_df)}\n"
+        "Stratified by Ticket Priority, random_state=42, 70/15/15.\n"
+        "Exact-duplicate descriptions dropped before splitting (see eda.ipynb 4a).\n"
+        "Tokenizer fit on train split only - val/test use the same tokenizer,\n"
+        "unseen words map to <OOV> (index 1).\n"
+    )
+    (PROCESSED_DIR / "HANDOFF_NOTES.txt").write_text(notes)
+    print(notes)
+
+
+if __name__ == "__main__":
+    run_pipeline()
