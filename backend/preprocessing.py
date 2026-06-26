@@ -1,0 +1,41 @@
+"""Text cleaning + tokenisation pipeline for the Support Ticket Priority Classifier.
+
+Phase 3 (Person 2 support / Juan Jose ML): clean -> tokenise -> pad -> encode labels.
+"""
+
+import pandas as pd
+
+
+def fill_product_placeholder(description: str, product: str) -> str:
+    """Replace the literal '{product_purchased}' token with the real product name.
+
+    The raw dataset is template-generated and every row has at least one unfilled
+    placeholder (see backend/eda.ipynb, section 4b) - the most common by far is
+    '{product_purchased}', which has the real value sitting in the Product Purchased
+    column of the same row.
+    """
+    return description.replace("{product_purchased}", product)
+
+
+def clean_descriptions(df: pd.DataFrame) -> pd.DataFrame:
+    """Apply text cleaning to the 'Ticket Description' column, returning a copy."""
+    df = df.copy()
+    df["Ticket Description"] = df.apply(
+        lambda row: fill_product_placeholder(row["Ticket Description"], row["Product Purchased"]),
+        axis=1,
+    )
+    return df
+
+
+if __name__ == "__main__":
+    df = pd.read_csv("data/raw/customer_support_tickets.csv")
+
+    before = df["Ticket Description"].str.contains(r"\{product_purchased\}", regex=True).sum()
+    df = clean_descriptions(df)
+    after = df["Ticket Description"].str.contains(r"\{product_purchased\}", regex=True).sum()
+
+    print(f"Rows with literal '{{product_purchased}}' before cleaning: {before}")
+    print(f"Rows with literal '{{product_purchased}}' after cleaning:  {after}")
+    print()
+    print("Example:")
+    print(df.loc[0, "Ticket Description"])
