@@ -21,7 +21,7 @@ A deep learning MVP that automatically classifies incoming customer support tick
 - Priority classes are well balanced (~2,000–2,200 tickets each) — no resampling needed.
 - 95th-percentile description length is **57 words** → use this for `MAX_SEQ_LEN`.
 - **100% of descriptions** contain at least one unfilled `{placeholder}` token (this dataset is template-generated). `backend/preprocessing.py` fills `product_purchased` with the real product name and strips everything else (no real value to substitute, including malformed/unmatched braces).
-- ~4.6% exact-duplicate descriptions — dedupe across train/val/test splits before training to avoid leakage.
+- ~4.6% exact-duplicate descriptions in the *raw* text, but most of those were rows where the literal `{product_purchased}` token matched across different products — once cleaned (real product name filled in), only 73 true duplicates remain (0.9%). `preprocessing.py` dedupes on the cleaned text before splitting, so no duplicate spans train/val/test.
 - No `department` column exists; resolved as a `Ticket Type` → department lookup (see table below), not a second model output.
 
 See `backend/eda.ipynb` for the full analysis with charts.
@@ -39,17 +39,30 @@ See `backend/eda.ipynb` for the full analysis with charts.
 ```
 backend/
   data/raw/                  # downloaded dataset (customer_support_tickets.csv)
+  data/processed/            # X/y train/val/test .npy + tokenizer.pkl (Phase 3 handoff)
   download_data.py           # pulls dataset from Kaggle via kagglehub
   eda.ipynb                  # class distribution, text length, label quality checks
-  preprocessing.py           # text cleaning (placeholder fill/strip); tokenize/pad/split still to come
+  preprocessing.py           # clean -> dedupe -> split -> tokenize -> pad -> encode labels
   department_mapping.py      # Ticket Type -> department lookup
-  models/                    # trained model + tokenizer land here (Git LFS)
+  models/                    # trained model lands here (Git LFS)
   requirements.txt
 frontend/
   requirements.txt
 ```
 
 `backend/model_training.ipynb`, `backend/api.py`, and `frontend/app.py` are still to come (see Status below).
+
+### Phase 3 handoff (for Juan José)
+
+Run `python backend/preprocessing.py` to regenerate `backend/data/processed/`. Key numbers (also in `backend/data/processed/HANDOFF_NOTES.txt`):
+
+| | |
+|---|---|
+| `VOCAB_SIZE` | 5,968 |
+| `MAX_SEQ_LEN` | 57 |
+| `NUM_CLASSES` | 4 |
+| `LABEL_TO_ID` | `{"Low": 0, "Medium": 1, "High": 2, "Critical": 3}` |
+| Split | 70/15/15, stratified by `Ticket Priority`, `random_state=42` |
 
 ## Setup
 
@@ -92,7 +105,7 @@ Fixed on Day 1 so backend and frontend can be built in parallel:
 - [x] Repo structure, environment, dataset download
 - [x] EDA (class distribution, text length, label quality)
 - [x] Department routing resolved (`Ticket Type` lookup, not a model output)
-- [ ] Preprocessing: text cleaning done; tokenize/pad/split + tokenizer handoff still to come
+- [x] Preprocessing pipeline complete: clean, dedupe, split, tokenize, pad, encode labels — handoff artifacts in `backend/data/processed/`
 - [ ] Bi-LSTM model training & evaluation (accuracy, Macro F1, confusion matrix)
 - [ ] FastAPI `/predict` endpoint (mock → real model)
 - [ ] Streamlit frontend + end-to-end integration
