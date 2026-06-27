@@ -276,7 +276,7 @@ Include a simple flow diagram: Ticket Text → Bi-LSTM Model → Priority Badge 
 Leave placeholders for: model diagram, layer sizes, why Bidirectional LSTM, GloVe vs trained embeddings
 
 **Slide 5 — Dataset**
-- Source: Kaggle Support Ticket Priority Dataset (50K tickets)
+- Source: Kaggle Customer Support Ticket Dataset (~8.5K tickets)
 - 4 priority classes: Low / Medium / High / Critical
 - Include the class distribution bar chart from Person 2's EDA
 
@@ -320,7 +320,7 @@ If any demo ticket returns a wrong priority, do not panic. Note it, and prepare 
 ## Finishing the Deck
 
 Get these from Juan José on Day 3 morning:
-- Final accuracy number
+- Final accuracy number (currently sitting at **65%**)
 - Final Macro F1-Score  
 - Confusion matrix image (he'll have this from his evaluation code)
 

@@ -9,11 +9,11 @@ A Bidirectional LSTM model that reads incoming customer support ticket text and 
 
 | | |
 |---|---|
-| **Architecture** | Bidirectional LSTM + Keras Embedding Layer |
+| **Architecture** | Bidirectional LSTM + Keras Embedding Layer (Current Accuracy: 65%) |
 | **Dataset** | Support Ticket Priority Dataset — 50K rows |
 | **Dataset URL** | kaggle.com/datasets/albertobircoci/support-ticket-priority-dataset-50k |
-| **Backend** | FastAPI + saved Keras model |
-| **Frontend** | Streamlit (Python) |
+| **Backend** | FastAPI + saved Keras model (`models/ticket_classifier_tuned.keras`) |
+| **Frontend** | Streamlit (Python) — Customer Support Email interface (Subject + Body) |
 | **Team** | 3 people · 4-day sprint |
 
 ---
@@ -132,19 +132,24 @@ Everyone builds against this exact shape. Person 2 produces it. Person 3 consume
 
 ---
 
-## Deliverables Checklist
+## Deliverables Checklist (Status Update)
 
-| File | Owner | Due |
-|---|---|---|
-| `preprocessing.py` + numpy arrays + `tokenizer.pkl` | Person 2 | Day 1 EOD |
-| `eda.ipynb` with class distribution + length charts | Person 2 | Day 1 EOD |
-| FastAPI `/predict` endpoint running locally | Person 2 | Day 2 |
-| `ticket_classifier.keras` trained model | Juan José | Day 3 AM |
-| Accuracy, Macro F1, confusion matrix image | Juan José | Day 3 AM |
-| `app.py` connected to real API | Person 3 | Day 3 PM |
-| Full presentation deck (PDF) | Person 3 | Day 4 AM |
-| Clean `README.md` with setup + metrics | Person 3 | Day 4 AM |
-| GitHub repo with all files committed | All | Day 4 AM |
+**✅ Completed (Model Phase):**
+- **Data Pipeline:** `preprocessing.py` + numpy arrays + `tokenizer.pkl`
+- **EDA:** `eda.ipynb` with class distribution + length charts
+- **Model Training:** `ticket_classifier_tuned.keras` trained model (Achieved **65% Accuracy**)
+- **Metrics:** Accuracy, Macro F1, confusion matrix image generated.
+
+**🚀 Missing & Next Steps (Production & Integration Phase):**
+1. **FastAPI Backend (The API Bridge)**
+   - Need to build the `/predict` endpoint that loads `models/ticket_classifier_tuned.keras`.
+   - The API is critical because it separates our heavy ML model from the lightweight frontend, exposing a simple prediction service.
+2. **Streamlit Frontend (The UI)**
+   - Build a UI tailored to our dataset format: representing a Customer Support Email.
+   - It needs to capture the **Subject** and **Body** of incoming tickets to feed into our API.
+3. **Presentation & Cleanup**
+   - Full presentation deck (PDF).
+   - Clean `README.md` with final demo instructions.
 
 ---
 

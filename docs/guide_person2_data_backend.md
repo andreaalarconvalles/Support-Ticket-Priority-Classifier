@@ -35,19 +35,14 @@ Set up a Kaggle account if you don't have one — you need it to download the da
 
 ---
 
-# DAY 1 — Data, EDA & Preprocessing
+# DAY 1 — Data, EDA & Preprocessing (✅ COMPLETED)
 
-## Step 1 — Download the Datasets
+## Step 1 — Download the Datasets (Done)
 
-Download both datasets. Use the Kaggle CLI or download manually from the browser.
-
-**Primary dataset (50K tickets with priority labels):**
-https://www.kaggle.com/datasets/albertobircoci/support-ticket-priority-dataset-50k
-
-**Secondary dataset (8,469 rows, real ticket text):**
+The dataset used is the **Customer Support Ticket Dataset (8,469 rows)**:
 https://www.kaggle.com/datasets/muqaddasejaz/customer-support-ticket-dataset
 
-Place both CSV files in a `/backend/data/` folder in the shared GitHub repo.
+*Note: The original 50K dataset was replaced with this one as it fits the schema perfectly.*
 
 ---
 
@@ -135,9 +130,9 @@ Ask yourself: does the language feel different between classes? Note anything un
 
 ---
 
-## Step 3 — Preprocessing Pipeline
+## Step 3 — Preprocessing Pipeline (Done by Juan José)
 
-This is your most critical output. Build a clean Python file called `preprocessing.py` — **not just a notebook**. Juan José will import this file directly.
+This has been completed and the output is ready in `data/processed/`. You can skip to Day 2, but here is the reference code that was used:
 
 ```python
 # backend/preprocessing.py
@@ -328,7 +323,7 @@ def load_model():
     global model, tokenizer
     if not MOCK_MODE:
         from tensorflow.keras.models import load_model as keras_load
-        model = keras_load("models/ticket_classifier.keras")
+        model = keras_load("models/ticket_classifier_tuned.keras")
         with open("models/tokenizer.pkl", "rb") as f:
             tokenizer = pickle.load(f)
         print("✅ Model and tokenizer loaded")

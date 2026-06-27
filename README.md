@@ -8,10 +8,10 @@ A deep learning MVP that automatically classifies incoming customer support tick
 
 | | |
 |---|---|
-| Backend model | Bidirectional LSTM (Keras / TensorFlow), text → priority |
+| Backend model | Bidirectional LSTM (Keras / TensorFlow), text → priority (Current Accuracy: 65%) |
 | Department routing | Plain lookup from `Ticket Type` (see `src/utils/department_mapping.py`) — not a model output, since `Ticket Type` is already known per ticket |
 | Backend serving | FastAPI `/predict` endpoint |
-| Frontend | Streamlit app |
+| Frontend | Streamlit app (Customer Support Email interface: Subject + Body) |
 | Dataset | [Customer Support Ticket Dataset](https://www.kaggle.com/datasets/muqaddasejaz/customer-support-ticket-dataset) (Kaggle) — 8,469 tickets, balanced across 4 priority classes |
 
 > Note: the original project brief referenced a different 50K-row Kaggle dataset. The team switched to the dataset above since it already matches the required schema (ticket text + 4-class priority) and is cleanly balanced.
@@ -41,7 +41,7 @@ Support-Ticket-Priority-Classifier/
 ├── data/                   # Data directory
 │   ├── raw/                # The original, immutable downloaded data
 │   └── processed/          # Cleaned and processed data ready for training
-├── models/                 # Saved final models (e.g., .pkl, .joblib, .pt)
+├── models/                 # Saved final models (e.g., ticket_classifier_tuned.keras)
 ├── tuning_logs/            # Logs from hyperparameter tuning (e.g., Optuna, MLflow)
 ├── notebooks/              # Jupyter notebooks for EDA and playground
 │   ├── 01_eda.ipynb        
@@ -111,15 +111,32 @@ Fixed on Day 1 so backend and frontend can be built in parallel:
 | Cancellation request | Customer Retention |
 | Product inquiry | Sales |
 
-## Status
+## Status & Next Steps
 
+### What's Done
 - [x] Repo structure, environment, dataset download
 - [x] EDA (class distribution, text length, label quality)
 - [x] Department routing resolved (`Ticket Type` lookup, not a model output)
-- [x] Preprocessing pipeline complete: clean, dedupe, split, tokenize, pad, encode labels — handoff artifacts in `backend/data/processed/`
-- [ ] Bi-LSTM model training & evaluation (accuracy, Macro F1, confusion matrix)
-- [ ] FastAPI `/predict` endpoint (mock → real model)
-- [ ] Streamlit frontend + end-to-end integration
-- [ ] Final presentation deck
+- [x] Preprocessing pipeline complete: clean, dedupe, split, tokenize, pad, encode labels
+- [x] Bi-LSTM model training & evaluation: Achieved an initial **65% accuracy**. This is sufficient for MVP and unblocks the rest of the project pipeline.
 
-Model metrics and a "how to run the full demo" section will be added here once training and integration are complete.
+### Model Production Usage
+The final trained model is stored in the `models/` directory (e.g., `ticket_classifier_tuned.keras`). 
+To use the model in production:
+1. Load the model using Keras: `tf.keras.models.load_model('models/ticket_classifier_tuned.keras')`
+2. Load the accompanying tokenizer (`tokenizer.pkl`) to preprocess incoming text identically to the training phase.
+3. Pass the padded sequences to the model's `predict()` function to get the confidence scores for each priority class.
+
+### What's Missing (Next 2 Big Steps)
+
+Now that the core model is ready, we are focusing on the user-facing parts and integration:
+
+1. **The API (Connecting Model to UI)**
+   - [ ] Build a FastAPI backend with a `/predict` endpoint.
+   - **Why:** The UI shouldn't run heavy ML models directly. The API acts as the bridge, receiving text from the frontend, asking the model for a prediction, and returning the priority JSON response.
+
+2. **The Frontend UI (Customer Support Interface)**
+   - [ ] Build a Streamlit application.
+   - **Why:** We need a realistic interface for support agents. 
+   - **Design:** The UI should be designed to accept standard customer support emails, specifically capturing the **Subject** and **Body** of the message to simulate a real inbox experience. This will then be sent to the API for classification.
+   - [ ] Final presentation deck preparation.
