@@ -1,12 +1,12 @@
 Handoff notes for Juan Jose (Phase 4-6)
 ========================================
-VOCAB_SIZE  = 5968
+VOCAB_SIZE  = 5726
 MAX_SEQ_LEN = 57
-NUM_CLASSES = 4
-LABEL_TO_ID = {'Low': 0, 'Medium': 1, 'High': 2, 'Critical': 3}
+NUM_CLASSES = 3
+LABEL_TO_ID = {'low': 0, 'medium': 1, 'high': 2}
 
-Split sizes (train/val/test): 5877 / 1259 / 1260
-Stratified by Ticket Priority, random_state=42, 70/15/15.
-Exact-duplicate descriptions dropped before splitting (see eda.ipynb 4a).
+Split sizes (train/val/test): 11436 / 2451 / 2451
+Stratified by priority, random_state=42, 70/15/15.
+Filtered to English language only. Tabular features dropped to prevent data leakage.
 Tokenizer fit on train split only - val/test use the same tokenizer,
-unseen words map to <OOV> (index 1).
+unseen words map to <OOV>. Padding is PRE (using pad_sequences).
