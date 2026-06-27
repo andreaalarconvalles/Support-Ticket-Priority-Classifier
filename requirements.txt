@@ -1,0 +1,13 @@
+tensorflow
+keras
+fastapi
+uvicorn
+scikit-learn
+nltk
+kagglehub
+pandas
+polars
+numpy
+matplotlib
+seaborn
+keras-tuner
