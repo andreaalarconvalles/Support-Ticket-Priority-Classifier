@@ -26,11 +26,11 @@ TOKENIZER_PATH = "data/processed/tokenizer.pkl"
 
 # Model hyperparameters (must match training)
 MAX_SEQ_LEN = 57
-NUM_CLASSES = 4
-VOCAB_SIZE = 5968
+NUM_CLASSES = 3
+VOCAB_SIZE = 5726
 
 # Label mapping
-LABEL_TO_ID = {"Low": 0, "Medium": 1, "High": 2, "Critical": 3}
+LABEL_TO_ID = {"Low": 0, "Medium": 1, "High": 2}
 ID_TO_LABEL = {v: k for k, v in LABEL_TO_ID.items()}
 
 # Department routing (from Ticket Type)
