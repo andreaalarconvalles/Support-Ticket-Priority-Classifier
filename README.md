@@ -8,7 +8,7 @@ A deep learning MVP that automatically classifies incoming customer support tick
 
 | | |
 |---|---|
-| Backend model | Bidirectional LSTM (Keras / TensorFlow), text → priority (Current Accuracy: 65%) |
+| Backend model | Bidirectional LSTM (Keras / TensorFlow), text → priority (Test Accuracy: 64.99%, Macro F1: 0.6435) |
 | Department routing | Plain lookup from `Ticket Type` (see `src/utils/department_mapping.py`) — not a model output, since `Ticket Type` is already known per ticket |
 | Backend serving | FastAPI `/predict` endpoint |
 | Frontend | Streamlit app (Customer Support Email interface: Subject + Body) |
@@ -25,6 +25,21 @@ A deep learning MVP that automatically classifies incoming customer support tick
 - No `department` column exists in the new dataset's used fields; resolved as a `Ticket Type` → department lookup (see table below). Note: the raw CSV's `queue` column already contains department-like categories (e.g. "Technical Support", "Billing and Payments") that the current lookup doesn't use yet — worth revisiting.
 
 See `notebooks/01_eda.ipynb` for the full analysis with charts.
+
+## Test results
+
+Final test accuracy: **0.6499** · Final test Macro F1: **0.6435**
+
+| Class | Precision | Recall | F1-score | Support |
+|---|---|---|---|---|
+| Low | 0.65 | 0.58 | 0.61 | 506 |
+| Medium | 0.64 | 0.66 | 0.65 | 993 |
+| High | 0.66 | 0.68 | 0.67 | 952 |
+| **Accuracy** | | | **0.65** | 2,451 |
+| **Macro avg** | 0.65 | 0.64 | 0.64 | 2,451 |
+| **Weighted avg** | 0.65 | 0.65 | 0.65 | 2,451 |
+
+Recall is weakest on **Low** (0.58) — the model under-detects the minority class, consistent with it being the smallest of the three (21% of data) despite balanced class weights. High and Medium perform comparably, both above the overall accuracy.
 
 ## Team
 
@@ -118,7 +133,7 @@ Fixed on Day 1 so backend and frontend can be built in parallel:
 - [x] EDA (class distribution, text length, label quality)
 - [x] Department routing resolved (`Ticket Type` lookup, not a model output)
 - [x] Preprocessing pipeline complete: clean, dedupe, split, tokenize, pad, encode labels
-- [x] Bi-LSTM model training & evaluation: Achieved an initial **65% accuracy**. This is sufficient for MVP and unblocks the rest of the project pipeline.
+- [x] Bi-LSTM model training & evaluation: Achieved **64.99% test accuracy** (Macro F1: 0.6435). This is sufficient for MVP and unblocks the rest of the project pipeline.
 
 ### Model Production Usage
 The final trained model is stored in the `models/` directory (e.g., `ticket_classifier_tuned.keras`). 

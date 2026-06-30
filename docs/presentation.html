@@ -22,6 +22,9 @@
     --purple: #8c968f;
     --text: #1c241e;
     --muted: #6c766f;
+    --p-low: #2f9e64;
+    --p-medium: #d4a017;
+    --p-high: #dc3545;
   }
 
   html, body {
@@ -170,9 +173,9 @@
 
   /* ── Priority badges ── */
   .priority { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; }
-  .p-low      { background: rgba(111,174,140,0.12);  color: var(--green);  border: 1px solid rgba(111,174,140,0.3); }
-  .p-medium   { background: rgba(31,122,77,0.12);  color: var(--blue);   border: 1px solid rgba(31,122,77,0.3); }
-  .p-high     { background: rgba(91,105,97,0.12);  color: var(--orange); border: 1px solid rgba(91,105,97,0.3); }
+  .p-low      { background: rgba(47,158,100,0.12);  color: var(--p-low);    border: 1px solid rgba(47,158,100,0.3); }
+  .p-medium   { background: rgba(212,160,23,0.14);  color: var(--p-medium); border: 1px solid rgba(212,160,23,0.35); }
+  .p-high     { background: rgba(220,53,69,0.12);   color: var(--p-high);   border: 1px solid rgba(220,53,69,0.3); }
   .p-critical { background: rgba(22,38,28,0.12);  color: var(--red);    border: 1px solid rgba(22,38,28,0.3); }
 
   /* ── Architecture diagram ── */
@@ -486,18 +489,18 @@
         </div>
 
         <div class="conf-row">
-          <span class="conf-label" style="color:var(--orange);">High</span>
-          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:78%;background:var(--orange);"></div></div>
+          <span class="conf-label" style="color:var(--p-high);">High</span>
+          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:78%;background:var(--p-high);"></div></div>
           <span class="conf-pct">78%</span>
         </div>
         <div class="conf-row">
-          <span class="conf-label" style="color:var(--blue);">Medium</span>
-          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:17%;background:var(--blue);"></div></div>
+          <span class="conf-label" style="color:var(--p-medium);">Medium</span>
+          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:17%;background:var(--p-medium);"></div></div>
           <span class="conf-pct">17%</span>
         </div>
         <div class="conf-row" style="margin-bottom:0;">
-          <span class="conf-label" style="color:var(--green);">Low</span>
-          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:5%;background:var(--green);"></div></div>
+          <span class="conf-label" style="color:var(--p-low);">Low</span>
+          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:5%;background:var(--p-low);"></div></div>
           <span class="conf-pct">5%</span>
         </div>
       </div>
@@ -555,15 +558,15 @@
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div>
             <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px;"><span class="priority p-low" style="font-size:11px;">Low</span><span style="color:var(--muted);">3,374 tickets · 21%</span></div>
-            <div style="height:10px;background:rgba(20,30,24,0.08);border-radius:5px;overflow:hidden;"><div style="width:21%;height:100%;background:var(--green);border-radius:5px;"></div></div>
+            <div style="height:10px;background:rgba(20,30,24,0.08);border-radius:5px;overflow:hidden;"><div style="width:21%;height:100%;background:var(--p-low);border-radius:5px;"></div></div>
           </div>
           <div>
             <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px;"><span class="priority p-medium" style="font-size:11px;">Medium</span><span style="color:var(--muted);">6,618 tickets · 41%</span></div>
-            <div style="height:10px;background:rgba(20,30,24,0.08);border-radius:5px;overflow:hidden;"><div style="width:41%;height:100%;background:var(--blue);border-radius:5px;"></div></div>
+            <div style="height:10px;background:rgba(20,30,24,0.08);border-radius:5px;overflow:hidden;"><div style="width:41%;height:100%;background:var(--p-medium);border-radius:5px;"></div></div>
           </div>
           <div>
             <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px;"><span class="priority p-high" style="font-size:11px;">High</span><span style="color:var(--muted);">6,346 tickets · 39%</span></div>
-            <div style="height:10px;background:rgba(20,30,24,0.08);border-radius:5px;overflow:hidden;"><div style="width:39%;height:100%;background:var(--orange);border-radius:5px;"></div></div>
+            <div style="height:10px;background:rgba(20,30,24,0.08);border-radius:5px;overflow:hidden;"><div style="width:39%;height:100%;background:var(--p-high);border-radius:5px;"></div></div>
           </div>
         </div>
       </div>
@@ -900,8 +903,8 @@
           <div class="stat-label">Test Accuracy</div>
         </div>
         <div class="card card-glow-teal" style="padding:20px;text-align:center;">
-          <div class="stat-num" style="color:var(--teal);">3</div>
-          <div class="stat-label">Priority Classes</div>
+          <div class="stat-num" style="color:var(--teal);">0.64</div>
+          <div class="stat-label">Macro F1</div>
         </div>
       </div>
 
@@ -938,18 +941,18 @@
       <div class="card" style="padding:22px;">
         <h4 style="margin-bottom:14px;">Sample Prediction Output</h4>
         <div class="conf-row">
-          <span class="conf-label" style="color:var(--orange);">High</span>
-          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:78%;background:var(--orange);"></div></div>
+          <span class="conf-label" style="color:var(--p-high);">High</span>
+          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:78%;background:var(--p-high);"></div></div>
           <span class="conf-pct">78%</span>
         </div>
         <div class="conf-row">
-          <span class="conf-label" style="color:var(--blue);">Medium</span>
-          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:17%;background:var(--blue);"></div></div>
+          <span class="conf-label" style="color:var(--p-medium);">Medium</span>
+          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:17%;background:var(--p-medium);"></div></div>
           <span class="conf-pct">17%</span>
         </div>
         <div class="conf-row" style="margin-bottom:12px;">
-          <span class="conf-label" style="color:var(--green);">Low</span>
-          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:5%;background:var(--green);"></div></div>
+          <span class="conf-label" style="color:var(--p-low);">Low</span>
+          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:5%;background:var(--p-low);"></div></div>
           <span class="conf-pct">5%</span>
         </div>
         <div style="padding:10px 14px;background:rgba(91,105,97,0.07);border:1px solid rgba(91,105,97,0.2);border-radius:8px;display:flex;align-items:center;gap:10px;">
@@ -1167,18 +1170,18 @@
         <span style="font-size:13px;color:var(--muted);">→ Technical Support</span>
       </div>
       <div class="conf-row">
-        <span class="conf-label" style="color:var(--orange);">High</span>
-        <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:78%;background:var(--orange);"></div></div>
+        <span class="conf-label" style="color:var(--p-high);">High</span>
+        <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:78%;background:var(--p-high);"></div></div>
         <span class="conf-pct">78%</span>
       </div>
       <div class="conf-row">
-        <span class="conf-label" style="color:var(--blue);">Medium</span>
-        <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:17%;background:var(--blue);"></div></div>
+        <span class="conf-label" style="color:var(--p-medium);">Medium</span>
+        <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:17%;background:var(--p-medium);"></div></div>
         <span class="conf-pct">17%</span>
       </div>
       <div class="conf-row">
-        <span class="conf-label" style="color:var(--green);">Low</span>
-        <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:5%;background:var(--green);"></div></div>
+        <span class="conf-label" style="color:var(--p-low);">Low</span>
+        <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:5%;background:var(--p-low);"></div></div>
         <span class="conf-pct">5%</span>
       </div>
     </div>
