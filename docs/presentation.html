@@ -1,1265 +1,2013 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Support Ticket Priority Classifier — DL Final Project</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support Ticket Priority Classifier — DL Final Project</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  :root {
-    --bg: #ffffff;
-    --bg2: #f6f8f6;
-    --card: #ffffff;
-    --card-border: #e1e7e2;
-    --blue: #1f7a4d;
-    --teal: #2f9e64;
-    --orange: #5b6961;
-    --red: #16261c;
-    --green: #6fae8c;
-    --purple: #8c968f;
-    --text: #1c241e;
-    --muted: #6c766f;
-    --p-low: #2f9e64;
-    --p-medium: #d4a017;
-    --p-high: #dc3545;
-  }
+    :root {
+      --bg: #ffffff;
+      --bg2: #f6f8f6;
+      --card: #ffffff;
+      --card-border: #e1e7e2;
+      --blue: #1f7a4d;
+      --teal: #2f9e64;
+      --orange: #5b6961;
+      --red: #16261c;
+      --green: #6fae8c;
+      --purple: #8c968f;
+      --text: #1c241e;
+      --muted: #6c766f;
+      --p-low: #2f9e64;
+      --p-medium: #d4a017;
+      --p-high: #dc3545;
+    }
 
-  html, body {
-    width: 100%; height: 100%;
-    background: var(--bg);
-    font-family: 'Inter', sans-serif;
-    color: var(--text);
-    overflow: hidden;
-  }
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      overflow: hidden;
+    }
 
-  /* ── Progress bar ── */
-  #progress {
-    position: fixed; top: 0; left: 0; height: 2px;
-    background: linear-gradient(90deg, var(--blue), var(--teal));
-    transition: width 0.4s ease;
-    z-index: 100;
-  }
+    /* ── Progress bar ── */
+    #progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--blue), var(--teal));
+      transition: width 0.4s ease;
+      z-index: 100;
+    }
 
-  /* ── Slide counter ── */
-  #counter {
-    position: fixed; bottom: 24px; right: 32px;
-    font-size: 13px; color: var(--muted);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.04em;
-    z-index: 100;
-  }
+    /* ── Slide counter ── */
+    #counter {
+      position: fixed;
+      bottom: 24px;
+      right: 32px;
+      font-size: 13px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      z-index: 100;
+    }
 
-  /* ── Nav arrows ── */
-  .nav-btn {
-    position: fixed; bottom: 20px;
-    background: var(--card); border: 1px solid var(--card-border);
-    color: var(--text); border-radius: 50%; width: 44px; height: 44px;
-    font-size: 18px; cursor: pointer; z-index: 100;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.2s, transform 0.15s;
-    backdrop-filter: blur(8px);
-  }
-  .nav-btn:hover { background: rgba(31,122,77,0.15); transform: scale(1.05); }
-  #btn-prev { left: calc(50% - 56px); }
-  #btn-next { left: calc(50% + 12px); }
+    /* ── Nav arrows ── */
+    .nav-btn {
+      position: fixed;
+      bottom: 20px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, transform 0.15s;
+      backdrop-filter: blur(8px);
+    }
 
-  /* ── Slide container ── */
-  #deck { width: 100%; height: 100%; position: relative; }
+    .nav-btn:hover {
+      background: rgba(31, 122, 77, 0.15);
+      transform: scale(1.05);
+    }
 
-  .slide {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
-    padding: 48px 64px;
-    opacity: 0; pointer-events: none;
-    transform: translateX(60px);
-    transition: opacity 0.45s cubic-bezier(.4,0,.2,1), transform 0.45s cubic-bezier(.4,0,.2,1);
-  }
-  .slide.active {
-    opacity: 1; pointer-events: all; transform: translateX(0);
-  }
-  .slide.exit {
-    opacity: 0; transform: translateX(-60px);
-  }
+    #btn-prev {
+      left: calc(50% - 56px);
+    }
 
-  /* ── Background meshes ── */
-  .slide::before {
-    content: '';
-    position: absolute; inset: 0; z-index: 0;
-    background: radial-gradient(ellipse 55% 45% at 85% 15%, rgba(31,122,77,0.04) 0%, transparent 65%);
-    pointer-events: none;
-  }
-  .slide > * { position: relative; z-index: 1; }
+    #btn-next {
+      left: calc(50% + 12px);
+    }
 
-  /* ── Tags ── */
-  .tag {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 4px 11px; border-radius: 4px;
-    font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
-  }
-  .tag-blue  { background: rgba(31,122,77,0.1); color: var(--blue); border: 1px solid rgba(31,122,77,0.22); }
-  .tag-teal  { background: rgba(47,158,100,0.1);  color: var(--teal); border: 1px solid rgba(47,158,100,0.22); }
-  .tag-orange{ background: rgba(91,105,97,0.1); color: var(--orange); border: 1px solid rgba(91,105,97,0.22); }
-  .tag-purple{ background: rgba(140,150,143,0.1); color: var(--purple); border: 1px solid rgba(140,150,143,0.22); }
-  .tag-green { background: rgba(111,174,140,0.1); color: var(--green); border: 1px solid rgba(111,174,140,0.22); }
+    /* ── Slide container ── */
+    #deck {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
 
-  /* ── Slide header ── */
-  .slide-label {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--blue); margin-bottom: 12px;
-  }
-  h1 { font-size: 52px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
-  h2 { font-size: 34px; font-weight: 700; line-height: 1.18; letter-spacing: -0.015em; }
-  h3 { font-size: 18px; font-weight: 600; }
-  h4 { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 48px 64px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(60px);
+      transition: opacity 0.45s cubic-bezier(.4, 0, .2, 1), transform 0.45s cubic-bezier(.4, 0, .2, 1);
+    }
 
-  .gradient-text {
-    background: linear-gradient(135deg, var(--blue) 0%, var(--teal) 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
+    .slide.active {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateX(0);
+    }
 
-  /* ── Cards ── */
-  .card {
-    background: var(--card); border: 1px solid var(--card-border);
-    border-radius: 10px; padding: 24px;
-    box-shadow: 0 1px 3px rgba(20,30,24,0.04);
-  }
-  .card-glow-blue  { border-top: 2px solid rgba(31,122,77,0.55); }
-  .card-glow-teal  { border-top: 2px solid rgba(47,158,100,0.55); }
-  .card-glow-orange{ border-top: 2px solid rgba(91,105,97,0.55); }
-  .card-glow-green { border-top: 2px solid rgba(111,174,140,0.55); }
-  .card-glow-purple{ border-top: 2px solid rgba(140,150,143,0.55); }
+    .slide.exit {
+      opacity: 0;
+      transform: translateX(-60px);
+    }
 
-  /* ── Grid helpers ── */
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+    /* ── Background meshes ── */
+    .slide::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background: radial-gradient(ellipse 55% 45% at 85% 15%, rgba(31, 122, 77, 0.04) 0%, transparent 65%);
+      pointer-events: none;
+    }
 
-  /* ── Bullet list ── */
-  .bullet-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-  .bullet-list li {
-    display: flex; align-items: flex-start; gap: 10px;
-    font-size: 15px; line-height: 1.55; color: #3c453e;
-  }
-  .bullet-list li::before {
-    content: ''; flex-shrink: 0;
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--blue); margin-top: 8px;
-  }
+    .slide>* {
+      position: relative;
+      z-index: 1;
+    }
 
-  /* ── Stat number ── */
-  .stat-num { font-size: 42px; font-weight: 900; letter-spacing: -0.03em; }
-  .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+    /* ── Tags ── */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
 
-  /* ── Code block ── */
-  .code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px; background: #1c241e;
-    border: 1px solid #1c241e;
-    border-radius: 10px; padding: 16px 20px;
-    line-height: 1.7; color: #dfe6e1;
-  }
-  .code .k { color: var(--purple); }
-  .code .s { color: var(--green); }
-  .code .n { color: var(--blue); }
-  .code .c { color: var(--muted); font-style: italic; }
+    .tag-blue {
+      background: rgba(31, 122, 77, 0.1);
+      color: var(--blue);
+      border: 1px solid rgba(31, 122, 77, 0.22);
+    }
 
-  /* ── Divider ── */
-  .divider {
-    height: 1px; background: var(--card-border); margin: 20px 0;
-  }
+    .tag-teal {
+      background: rgba(47, 158, 100, 0.1);
+      color: var(--teal);
+      border: 1px solid rgba(47, 158, 100, 0.22);
+    }
 
-  /* ── Priority badges ── */
-  .priority { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; }
-  .p-low      { background: rgba(47,158,100,0.12);  color: var(--p-low);    border: 1px solid rgba(47,158,100,0.3); }
-  .p-medium   { background: rgba(212,160,23,0.14);  color: var(--p-medium); border: 1px solid rgba(212,160,23,0.35); }
-  .p-high     { background: rgba(220,53,69,0.12);   color: var(--p-high);   border: 1px solid rgba(220,53,69,0.3); }
-  .p-critical { background: rgba(22,38,28,0.12);  color: var(--red);    border: 1px solid rgba(22,38,28,0.3); }
+    .tag-orange {
+      background: rgba(91, 105, 97, 0.1);
+      color: var(--orange);
+      border: 1px solid rgba(91, 105, 97, 0.22);
+    }
 
-  /* ── Architecture diagram ── */
-  .arch-box {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 14px 18px; border-radius: 12px; text-align: center;
-    font-size: 13px; font-weight: 600; min-width: 100px;
-  }
-  .arch-arrow {
-    display: flex; align-items: center; color: var(--muted); font-size: 18px;
-    padding: 0 4px;
-  }
-  .arch-row {
-    display: flex; align-items: center; justify-content: center;
-    gap: 6px; flex-wrap: nowrap;
-  }
-  .arch-sub { font-size: 10px; font-weight: 400; color: var(--muted); margin-top: 3px; }
+    .tag-purple {
+      background: rgba(140, 150, 143, 0.1);
+      color: var(--purple);
+      border: 1px solid rgba(140, 150, 143, 0.22);
+    }
 
-  /* ── Confidence bars ── */
-  .conf-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .conf-label { font-size: 12px; font-weight: 600; width: 70px; }
-  .conf-bar-bg { flex: 1; height: 8px; background: rgba(20,30,24,0.08); border-radius: 4px; overflow: hidden; }
-  .conf-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
-  .conf-pct { font-size: 12px; color: var(--muted); width: 36px; text-align: right; font-family: 'JetBrains Mono', monospace; }
+    .tag-green {
+      background: rgba(111, 174, 140, 0.1);
+      color: var(--green);
+      border: 1px solid rgba(111, 174, 140, 0.22);
+    }
 
-  /* ── Metric rows ── */
-  .metric-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(20,30,24,0.05); }
-  .metric-row:last-child { border-bottom: none; }
-  .metric-name { font-size: 13px; color: var(--muted); }
-  .metric-value { font-size: 15px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    /* ── Slide header ── */
+    .slide-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 12px;
+    }
 
-  /* ── Timeline ── */
-  .timeline { display: flex; flex-direction: column; gap: 0; }
-  .tl-item { display: flex; gap: 16px; }
-  .tl-line { display: flex; flex-direction: column; align-items: center; }
-  .tl-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); flex-shrink: 0; margin-top: 5px; }
-  .tl-vline { flex: 1; width: 2px; background: rgba(31,122,77,0.2); margin: 3px 0; min-height: 20px; }
-  .tl-content { padding-bottom: 18px; }
-  .tl-content h4 { font-size: 14px; font-weight: 700; color: var(--text); text-transform: none; letter-spacing: 0; }
-  .tl-content p { font-size: 13px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+    h1 {
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
 
-  /* ── Rubric row ── */
-  .rubric-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; background: var(--card); border: 1px solid var(--card-border); margin-bottom: 8px; }
-  .rubric-icon { font-size: 20px; }
-  .rubric-name { font-size: 14px; font-weight: 600; flex: 1; }
-  .rubric-weight { font-size: 20px; font-weight: 800; }
+    h2 {
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1.18;
+      letter-spacing: -0.015em;
+    }
 
-  /* ── Step boxes ── */
-  .step-box {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 8px; padding: 18px 12px; border-radius: 12px;
-    background: var(--card); border: 1px solid var(--card-border); text-align: center;
-  }
-  .step-num {
-    width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--blue);
-    color: var(--blue); font-size: 13px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .step-label { font-size: 13px; font-weight: 600; }
-  .step-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+    }
 
-  /* ── IE logo simulation ── */
-  .ie-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 12px; font-weight: 600; color: var(--muted);
-    letter-spacing: 0.05em;
-  }
-  .ie-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); }
+    h4 {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
 
-  /* ── Slide-specific layouts ── */
+    .gradient-text {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--teal) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-  /* SLIDE 1: Title */
-  #s1 { justify-content: center; }
-  #s1 .subtitle { font-size: 17px; font-weight: 300; color: #5b6961; margin-top: 12px; line-height: 1.5; }
-  #s1 .tag-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 32px; }
-  #s1 .meta { margin-top: 48px; display: flex; align-items: center; gap: 20px; }
-  #s1 .meta-divider { width: 1px; height: 30px; background: var(--card-border); }
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(20, 30, 24, 0.04);
+    }
 
-  /* Accent line */
-  .accent-line { width: 40px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--blue), var(--teal)); margin-bottom: 16px; }
+    .card-glow-blue {
+      border-top: 2px solid rgba(31, 122, 77, 0.55);
+    }
 
-</style>
+    .card-glow-teal {
+      border-top: 2px solid rgba(47, 158, 100, 0.55);
+    }
+
+    .card-glow-orange {
+      border-top: 2px solid rgba(91, 105, 97, 0.55);
+    }
+
+    .card-glow-green {
+      border-top: 2px solid rgba(111, 174, 140, 0.55);
+    }
+
+    .card-glow-purple {
+      border-top: 2px solid rgba(140, 150, 143, 0.55);
+    }
+
+    /* ── Grid helpers ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ── Bullet list ── */
+    .bullet-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bullet-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 15px;
+      line-height: 1.55;
+      color: #3c453e;
+    }
+
+    .bullet-list li::before {
+      content: '';
+      flex-shrink: 0;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--blue);
+      margin-top: 8px;
+    }
+
+    /* ── Stat number ── */
+    .stat-num {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Code block ── */
+    .code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      background: #1c241e;
+      border: 1px solid #1c241e;
+      border-radius: 10px;
+      padding: 16px 20px;
+      line-height: 1.7;
+      color: #dfe6e1;
+    }
+
+    .code .k {
+      color: var(--purple);
+    }
+
+    .code .s {
+      color: var(--green);
+    }
+
+    .code .n {
+      color: var(--blue);
+    }
+
+    .code .c {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--card-border);
+      margin: 20px 0;
+    }
+
+    /* ── Priority badges ── */
+    .priority {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .p-low {
+      background: rgba(47, 158, 100, 0.12);
+      color: var(--p-low);
+      border: 1px solid rgba(47, 158, 100, 0.3);
+    }
+
+    .p-medium {
+      background: rgba(212, 160, 23, 0.14);
+      color: var(--p-medium);
+      border: 1px solid rgba(212, 160, 23, 0.35);
+    }
+
+    .p-high {
+      background: rgba(220, 53, 69, 0.12);
+      color: var(--p-high);
+      border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .p-critical {
+      background: rgba(22, 38, 28, 0.12);
+      color: var(--red);
+      border: 1px solid rgba(22, 38, 28, 0.3);
+    }
+
+    /* ── Architecture diagram ── */
+    .arch-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 18px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      min-width: 100px;
+    }
+
+    .arch-arrow {
+      display: flex;
+      align-items: center;
+      color: var(--muted);
+      font-size: 18px;
+      padding: 0 4px;
+    }
+
+    .arch-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+
+    .arch-sub {
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ── Confidence bars ── */
+    .conf-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .conf-label {
+      font-size: 12px;
+      font-weight: 600;
+      width: 70px;
+    }
+
+    .conf-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: rgba(20, 30, 24, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .conf-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s ease;
+    }
+
+    .conf-pct {
+      font-size: 12px;
+      color: var(--muted);
+      width: 36px;
+      text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── Metric rows ── */
+    .metric-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(20, 30, 24, 0.05);
+    }
+
+    .metric-row:last-child {
+      border-bottom: none;
+    }
+
+    .metric-name {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .metric-value {
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── Timeline ── */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .tl-item {
+      display: flex;
+      gap: 16px;
+    }
+
+    .tl-line {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .tl-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--blue);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .tl-vline {
+      flex: 1;
+      width: 2px;
+      background: rgba(31, 122, 77, 0.2);
+      margin: 3px 0;
+      min-height: 20px;
+    }
+
+    .tl-content {
+      padding-bottom: 18px;
+    }
+
+    .tl-content h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .tl-content p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 3px;
+      line-height: 1.5;
+    }
+
+    /* ── Rubric row ── */
+    .rubric-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      margin-bottom: 8px;
+    }
+
+    .rubric-icon {
+      font-size: 20px;
+    }
+
+    .rubric-name {
+      font-size: 14px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .rubric-weight {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    /* ── Step boxes ── */
+    .step-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 18px 12px;
+      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      text-align: center;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--blue);
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .step-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    /* ── IE logo simulation ── */
+    .ie-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .ie-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+
+    /* ── Slide-specific layouts ── */
+
+    /* SLIDE 1: Title */
+    #s1 {
+      justify-content: center;
+    }
+
+    #s1 .subtitle {
+      font-size: 17px;
+      font-weight: 300;
+      color: #5b6961;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+
+    #s1 .tag-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
+
+    #s1 .meta {
+      margin-top: 48px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    #s1 .meta-divider {
+      width: 1px;
+      height: 30px;
+      background: var(--card-border);
+    }
+
+    /* Accent line */
+    .accent-line {
+      width: 40px;
+      height: 3px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--blue), var(--teal));
+      margin-bottom: 16px;
+    }
+  </style>
 </head>
+
 <body>
 
-<div id="progress"></div>
-<div id="counter">1 / 13</div>
-<button class="nav-btn" id="btn-prev">&#8592;</button>
-<button class="nav-btn" id="btn-next">&#8594;</button>
+  <div id="progress"></div>
+  <div id="counter">1 / 13</div>
+  <button class="nav-btn" id="btn-prev">&#8592;</button>
+  <button class="nav-btn" id="btn-next">&#8594;</button>
 
-<div id="deck">
+  <div id="deck">
 
-<!-- ═══════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════
      SLIDE 1 — Title
 ═══════════════════════════════════════════════════════ -->
-<div class="slide active" id="s1">
-  <div style="display:flex;align-items:stretch;gap:56px;height:560px;max-height:72vh;width:100%;">
+    <div class="slide active" id="s1">
+      <div style="display:flex;align-items:stretch;gap:56px;height:560px;max-height:72vh;width:100%;">
 
-    <!-- left: text -->
-    <div style="flex:0.7;display:flex;flex-direction:column;justify-content:center;min-width:0;">
-      <div class="ie-badge" style="margin-bottom:28px;">
-        <div class="ie-dot"></div>
-        IE University &nbsp;·&nbsp; Deep Learning &nbsp;·&nbsp; Final Project 2026
-      </div>
-      <h1 style="font-size:36px;">Support Ticket<br/><span class="gradient-text">Priority Classifier</span></h1>
-      <p class="subtitle">Automating customer support triage with a Bidirectional LSTM deep learning model</p>
-      <div class="tag-row">
-        <span class="tag tag-blue">Bi-LSTM</span>
-        <span class="tag tag-teal">NLP</span>
-        <span class="tag tag-orange">FastAPI</span>
-        <span class="tag tag-purple">Streamlit</span>
-        <span class="tag tag-green">TensorFlow / Keras</span>
-      </div>
-      <div class="meta" style="flex-wrap:wrap;row-gap:16px;">
-        <div>
-          <div style="font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;">Dataset</div>
-          <div style="font-size:15px;font-weight:600;">16,338 support tickets (EN) — Kaggle</div>
-        </div>
-        <div class="meta-divider"></div>
-        <div>
-          <div style="font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;">Classes</div>
-          <div style="display:flex;gap:8px;margin-top:2px;">
-            <span class="priority p-low">Low</span>
-            <span class="priority p-medium">Medium</span>
-            <span class="priority p-high">High</span>
+        <!-- left: text -->
+        <div style="flex:0.7;display:flex;flex-direction:column;justify-content:center;min-width:0;">
+          <div class="ie-badge" style="margin-bottom:28px;">
+            <div class="ie-dot"></div>
+            IE University &nbsp;·&nbsp; Deep Learning &nbsp;·&nbsp; Final Project 2026
+          </div>
+          <h1 style="font-size:36px;">Support Ticket<br /><span class="gradient-text">Priority Classifier</span></h1>
+          <p class="subtitle">Automating customer support triage with a Bidirectional LSTM deep learning model</p>
+          <div class="tag-row">
+            <span class="tag tag-blue">Bi-LSTM</span>
+            <span class="tag tag-teal">NLP</span>
+            <span class="tag tag-orange">FastAPI</span>
+            <span class="tag tag-purple">Streamlit</span>
+            <span class="tag tag-green">TensorFlow / Keras</span>
+          </div>
+          <div class="meta" style="flex-wrap:wrap;row-gap:16px;">
+            <div>
+              <div
+                style="font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;">
+                Dataset</div>
+              <div style="font-size:15px;font-weight:600;">16,338 support tickets (EN) — Kaggle</div>
+            </div>
+            <div class="meta-divider"></div>
+            <div>
+              <div
+                style="font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;">
+                Classes</div>
+              <div style="display:flex;gap:8px;margin-top:2px;">
+                <span class="priority p-low">Low</span>
+                <span class="priority p-medium">Medium</span>
+                <span class="priority p-high">High</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:18px;">
+            <div
+              style="font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;">
+              Team</div>
+            <div style="font-size:15px;font-weight:600;">Andrea Alarcón · Dalton Kern · Juan José Rincón</div>
           </div>
         </div>
-      </div>
-      <div style="margin-top:18px;">
-        <div style="font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;">Team</div>
-        <div style="font-size:15px;font-weight:600;">Andrea Alarcón · Dalton Kern · Juan José Rincón</div>
+
+        <!-- right: hero image, half the screen -->
+        <div
+          style="flex:1.5;border-radius:20px;overflow:hidden;border:1px solid var(--card-border);box-shadow:0 1px 3px rgba(20,30,24,0.04);">
+          <img src="assets/hero-bg.webp"
+            style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;" />
+        </div>
       </div>
     </div>
 
-    <!-- right: hero image, half the screen -->
-    <div style="flex:1.5;border-radius:20px;overflow:hidden;border:1px solid var(--card-border);box-shadow:0 1px 3px rgba(20,30,24,0.04);">
-      <img src="assets/hero-bg.webp" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;" />
-    </div>
-  </div>
-</div>
 
-
-<!-- ═══════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════
      SLIDE 2 — The Problem
 ═══════════════════════════════════════════════════════ -->
-<div class="slide" id="s2">
-  <div class="slide-label">01 — Problem Statement</div>
-  <h2>Manual Triage is <span class="gradient-text">Breaking</span> Support Teams</h2>
+    <div class="slide" id="s2">
+      <div class="slide-label">01 — Problem Statement</div>
+      <h2>Manual Triage is <span class="gradient-text">Breaking</span> Support Teams</h2>
 
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px;">
-    <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;">
-      <div style="color:var(--muted);margin-bottom:2px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-      <h3 style="font-size:15px;">Slow &amp; Repetitive</h3>
-      <p style="font-size:13px;color:var(--muted);line-height:1.5;">Agents manually read and categorise every ticket before routing it — a process that scales poorly as volume grows.</p>
-    </div>
-    <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;">
-      <div style="color:var(--muted);margin-bottom:2px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg></div>
-      <h3 style="font-size:15px;">Inconsistent</h3>
-      <p style="font-size:13px;color:var(--muted);line-height:1.5;">Two agents looking at the same ticket often assign different priority levels, breaking SLA consistency.</p>
-    </div>
-    <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;border-color:rgba(22,38,28,0.25);">
-      <div style="color:var(--red);margin-bottom:2px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-      <h3 style="font-size:15px;color:var(--red);">Critical Tickets Buried</h3>
-      <p style="font-size:13px;color:var(--muted);line-height:1.5;">Urgent issues regularly sit in the queue for hours before reaching the right engineer.</p>
-    </div>
-    <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;">
-      <div style="color:var(--muted);margin-bottom:2px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
-      <h3 style="font-size:15px;">Expensive Coverage</h3>
-      <p style="font-size:13px;color:var(--muted);line-height:1.5;">Round-the-clock support needs round-the-clock human staffing just to keep up with triage volume.</p>
-    </div>
-    <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;">
-      <div style="color:var(--muted);margin-bottom:2px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-      <h3 style="font-size:15px;">Compounds at Scale</h3>
-      <p style="font-size:13px;color:var(--muted);line-height:1.5;">As ticket volume grows, so does headcount cost — the problem gets worse, not better, over time.</p>
-    </div>
-    <div class="card card-glow-orange" style="padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;">
-      <div class="stat-num" style="color:var(--orange);">3 min</div>
-      <div class="stat-label">lost per ticket, manually</div>
-    </div>
-  </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px;">
+        <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="color:var(--muted);margin-bottom:2px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg></div>
+          <h3 style="font-size:15px;">Slow &amp; Repetitive</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.5;">Agents manually read and categorise every ticket
+            before routing it — a process that scales poorly as volume grows.</p>
+        </div>
+        <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="color:var(--muted);margin-bottom:2px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <circle cx="12" cy="12" r="5" />
+              <circle cx="12" cy="12" r="1" fill="currentColor" />
+            </svg></div>
+          <h3 style="font-size:15px;">Inconsistent</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.5;">Two agents looking at the same ticket often
+            assign different priority levels, breaking SLA consistency.</p>
+        </div>
+        <div class="card"
+          style="padding:20px;display:flex;flex-direction:column;gap:10px;border-color:rgba(22,38,28,0.25);">
+          <div style="color:var(--red);margin-bottom:2px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg></div>
+          <h3 style="font-size:15px;color:var(--red);">Critical Tickets Buried</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.5;">Urgent issues regularly sit in the queue for
+            hours before reaching the right engineer.</p>
+        </div>
+        <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="color:var(--muted);margin-bottom:2px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+            </svg></div>
+          <h3 style="font-size:15px;">Expensive Coverage</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.5;">Round-the-clock support needs round-the-clock
+            human staffing just to keep up with triage volume.</p>
+        </div>
+        <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="color:var(--muted);margin-bottom:2px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+              <polyline points="17 6 23 6 23 12" />
+            </svg></div>
+          <h3 style="font-size:15px;">Compounds at Scale</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.5;">As ticket volume grows, so does headcount cost —
+            the problem gets worse, not better, over time.</p>
+        </div>
+        <div class="card card-glow-orange"
+          style="padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;">
+          <div class="stat-num" style="color:var(--orange);">3 min</div>
+          <div class="stat-label">lost per ticket, manually</div>
+        </div>
+      </div>
 
-  <div style="margin-top:18px;display:flex;gap:16px;flex:1;align-items:stretch;">
-    <div class="card card-glow-blue" style="flex:1;padding:18px 28px;display:flex;align-items:center;gap:24px;">
-      <div class="stat-num" style="color:var(--blue);white-space:nowrap;">900 min</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.5;">lost <strong style="color:var(--text);">every single day</strong> — 3 min × 300 tickets/day spent purely on triage, not resolution.</div>
+      <div style="margin-top:18px;display:flex;gap:16px;flex:1;align-items:stretch;">
+        <div class="card card-glow-blue" style="flex:1;padding:18px 28px;display:flex;align-items:center;gap:24px;">
+          <div class="stat-num" style="color:var(--blue);white-space:nowrap;">900 min</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.5;">lost <strong style="color:var(--text);">every
+              single day</strong> — 3 min × 300 tickets/day spent purely on triage, not resolution.</div>
+        </div>
+        <div class="card card-glow-teal" style="flex:1;padding:18px 28px;display:flex;align-items:center;gap:24px;">
+          <div class="stat-num" style="color:var(--teal);white-space:nowrap;">2.5 FTE</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.5;">worth of salary spent annually on triage —
+            work that delivers <strong style="color:var(--text);">zero customer value</strong>.</div>
+        </div>
+      </div>
     </div>
-    <div class="card card-glow-teal" style="flex:1;padding:18px 28px;display:flex;align-items:center;gap:24px;">
-      <div class="stat-num" style="color:var(--teal);white-space:nowrap;">2.5 FTE</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.5;">worth of salary spent annually on triage — work that delivers <strong style="color:var(--text);">zero customer value</strong>.</div>
-    </div>
-  </div>
-</div>
 
 
-<!-- ═══════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════
      SLIDE 3 — Business Value
 ═══════════════════════════════════════════════════════ -->
-<div class="slide" id="s3">
-  <div class="slide-label">02 — Business Value</div>
-  <h2>Quantified <span class="gradient-text">ROI</span> of Automation</h2>
-  <div class="grid-3" style="margin-top:28px;flex:1;align-items:start;">
+    <div class="slide" id="s3">
+      <div class="slide-label">02 — Business Value</div>
+      <h2>Quantified <span class="gradient-text">ROI</span> of Automation</h2>
+      <div class="grid-3" style="margin-top:28px;flex:1;align-items:start;">
 
-    <div class="card card-glow-teal" style="display:flex;flex-direction:column;gap:16px;padding:28px;">
-      <div style="color:var(--teal);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-      <div>
-        <div class="stat-num" style="color:var(--teal);">900 min</div>
-        <div class="stat-label">saved every day</div>
+        <div class="card card-glow-teal" style="display:flex;flex-direction:column;gap:16px;padding:28px;">
+          <div style="color:var(--teal);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg></div>
+          <div>
+            <div class="stat-num" style="color:var(--teal);">900 min</div>
+            <div class="stat-label">saved every day</div>
+          </div>
+          <div class="divider"></div>
+          <h4 style="font-size:12px;color:var(--teal);">Time Savings</h4>
+          <ul class="bullet-list" style="font-size:13px;">
+            <li>Triage from 3 min → &lt;1 second per ticket</li>
+            <li>Agents focus on resolution, not routing</li>
+            <li>Scales to any ticket volume without extra headcount</li>
+          </ul>
+        </div>
+
+        <div class="card card-glow-blue" style="display:flex;flex-direction:column;gap:16px;padding:28px;">
+          <div style="color:var(--blue);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+              <line x1="2" y1="20" x2="22" y2="20" />
+            </svg></div>
+          <div>
+            <div class="stat-num" style="color:var(--blue);">+15%</div>
+            <div class="stat-label">CSAT improvement</div>
+          </div>
+          <div class="divider"></div>
+          <h4 style="font-size:12px;color:var(--blue);">Revenue Protection</h4>
+          <ul class="bullet-list" style="font-size:13px;">
+            <li>Critical tickets escalated in real-time, not hours later</li>
+            <li>Reduced customer churn from faster resolution</li>
+            <li>SLA compliance improves across all priority tiers</li>
+          </ul>
+        </div>
+
+        <div class="card card-glow-orange" style="display:flex;flex-direction:column;gap:16px;padding:28px;">
+          <div style="color:var(--orange);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+            </svg></div>
+          <div>
+            <div class="stat-num" style="color:var(--orange);">24/7</div>
+            <div class="stat-label">automated triage</div>
+          </div>
+          <div class="divider"></div>
+          <h4 style="font-size:12px;color:var(--orange);">Operational Efficiency</h4>
+          <ul class="bullet-list" style="font-size:13px;">
+            <li>Consistent classification — no inter-agent variance</li>
+            <li>Automatic department routing included</li>
+            <li>Confidence score flags borderline cases for human review</li>
+          </ul>
+        </div>
       </div>
-      <div class="divider"></div>
-      <h4 style="font-size:12px;color:var(--teal);">Time Savings</h4>
-      <ul class="bullet-list" style="font-size:13px;">
-        <li>Triage from 3 min → &lt;1 second per ticket</li>
-        <li>Agents focus on resolution, not routing</li>
-        <li>Scales to any ticket volume without extra headcount</li>
-      </ul>
     </div>
 
-    <div class="card card-glow-blue" style="display:flex;flex-direction:column;gap:16px;padding:28px;">
-      <div style="color:var(--blue);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg></div>
-      <div>
-        <div class="stat-num" style="color:var(--blue);">+15%</div>
-        <div class="stat-label">CSAT improvement</div>
-      </div>
-      <div class="divider"></div>
-      <h4 style="font-size:12px;color:var(--blue);">Revenue Protection</h4>
-      <ul class="bullet-list" style="font-size:13px;">
-        <li>Critical tickets escalated in real-time, not hours later</li>
-        <li>Reduced customer churn from faster resolution</li>
-        <li>SLA compliance improves across all priority tiers</li>
-      </ul>
-    </div>
 
-    <div class="card card-glow-orange" style="display:flex;flex-direction:column;gap:16px;padding:28px;">
-      <div style="color:var(--orange);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
-      <div>
-        <div class="stat-num" style="color:var(--orange);">24/7</div>
-        <div class="stat-label">automated triage</div>
-      </div>
-      <div class="divider"></div>
-      <h4 style="font-size:12px;color:var(--orange);">Operational Efficiency</h4>
-      <ul class="bullet-list" style="font-size:13px;">
-        <li>Consistent classification — no inter-agent variance</li>
-        <li>Automatic department routing included</li>
-        <li>Confidence score flags borderline cases for human review</li>
-      </ul>
-    </div>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════
      SLIDE 4 — Our Solution
 ═══════════════════════════════════════════════════════ -->
-<div class="slide" id="s4">
-  <div class="slide-label">03 — Solution Overview</div>
-  <h2>What We <span class="gradient-text">Built</span></h2>
-  <div style="display:grid;grid-template-columns:1fr 1.05fr;gap:28px;margin-top:26px;flex:1;">
+    <div class="slide" id="s4">
+      <div class="slide-label">03 — Solution Overview</div>
+      <h2>What We <span class="gradient-text">Built</span></h2>
+      <div style="display:grid;grid-template-columns:1fr 1.05fr;gap:28px;margin-top:26px;flex:1;">
 
-    <!-- Left: capability cards -->
-    <div style="display:flex;flex-direction:column;gap:16px;">
-      <div class="card card-glow-blue" style="padding:24px;flex:1;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-          <span style="color:var(--blue);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="15" x2="23" y2="15"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="15" x2="4" y2="15"/></svg></span>
-          <h3>Deep Learning Backend</h3>
+        <!-- Left: capability cards -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card card-glow-blue" style="padding:24px;flex:1;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+              <span style="color:var(--blue);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="4" width="16" height="16" rx="2" />
+                  <rect x="9" y="9" width="6" height="6" />
+                  <line x1="9" y1="1" x2="9" y2="4" />
+                  <line x1="15" y1="1" x2="15" y2="4" />
+                  <line x1="9" y1="20" x2="9" y2="23" />
+                  <line x1="15" y1="20" x2="15" y2="23" />
+                  <line x1="20" y1="9" x2="23" y2="9" />
+                  <line x1="20" y1="15" x2="23" y2="15" />
+                  <line x1="1" y1="9" x2="4" y2="9" />
+                  <line x1="1" y1="15" x2="4" y2="15" />
+                </svg></span>
+              <h3>Deep Learning Backend</h3>
+            </div>
+            <ul class="bullet-list">
+              <li>Bidirectional LSTM trained on 16,338 English tickets</li>
+              <li>3-class priority output: Low, Medium, High</li>
+              <li>Per-class confidence scores on every prediction</li>
+              <li>Served via a FastAPI <code
+                  style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--teal);">/predict</code> REST
+                endpoint</li>
+            </ul>
+          </div>
+          <div class="card card-glow-teal" style="padding:24px;flex:1;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+              <span style="color:var(--teal);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <line x1="8" y1="21" x2="16" y2="21" />
+                  <line x1="12" y1="17" x2="12" y2="21" />
+                </svg></span>
+              <h3>Streamlit Frontend</h3>
+            </div>
+            <ul class="bullet-list">
+              <li>Email-style interface (Subject + Body) for agents</li>
+              <li>Real-time prediction — <strong style="color:var(--text);">&lt;1 second</strong> response</li>
+              <li>Department routing recommendation per ticket</li>
+              <li>Classification history tracking in the session</li>
+            </ul>
+          </div>
         </div>
-        <ul class="bullet-list">
-          <li>Bidirectional LSTM trained on 16,338 English tickets</li>
-          <li>3-class priority output: Low, Medium, High</li>
-          <li>Per-class confidence scores on every prediction</li>
-          <li>Served via a FastAPI <code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--teal);">/predict</code> REST endpoint</li>
-        </ul>
-      </div>
-      <div class="card card-glow-teal" style="padding:24px;flex:1;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-          <span style="color:var(--teal);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
-          <h3>Streamlit Frontend</h3>
+
+        <!-- Right: product mockup -->
+        <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+          <div
+            style="display:flex;align-items:center;gap:6px;padding:10px 16px;background:rgba(20,30,24,0.03);border-bottom:1px solid var(--card-border);">
+            <div style="width:9px;height:9px;border-radius:50%;background:#ff5f57;"></div>
+            <div style="width:9px;height:9px;border-radius:50%;background:#febc2e;"></div>
+            <div style="width:9px;height:9px;border-radius:50%;background:#28c840;"></div>
+            <div style="margin-left:10px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;">
+              localhost:8501 — Support Ticket Classifier</div>
+          </div>
+          <div style="padding:24px;flex:1;display:flex;flex-direction:column;">
+            <div
+              style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">
+              Subject</div>
+            <div
+              style="padding:9px 12px;background:rgba(20,30,24,0.04);border:1px solid var(--card-border);border-radius:7px;font-size:13px;color:#3c453e;margin-bottom:14px;">
+              Payment failed twice, still no access</div>
+
+            <div
+              style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">
+              Description</div>
+            <div
+              style="padding:9px 12px;background:rgba(20,30,24,0.04);border:1px solid var(--card-border);border-radius:7px;font-size:13px;color:#3c453e;margin-bottom:16px;min-height:44px;">
+              My subscription payment failed twice and I still can't access the dashboard. Need this fixed today.</div>
+
+            <div style="display:flex;justify-content:center;margin-bottom:18px;">
+              <div
+                style="padding:9px 30px;background:linear-gradient(135deg,var(--blue),var(--teal));border-radius:8px;font-size:13px;font-weight:700;color:#ffffff;">
+                Classify Ticket →</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 12px;">
+              <span class="priority p-high">HIGH</span>
+              <span style="font-size:12px;color:var(--muted);">→ routed to <strong
+                  style="color:var(--text);">Billing</strong></span>
+            </div>
+
+            <div class="conf-row">
+              <span class="conf-label" style="color:var(--p-high);">High</span>
+              <div class="conf-bar-bg">
+                <div class="conf-bar-fill" style="width:78%;background:var(--p-high);"></div>
+              </div>
+              <span class="conf-pct">78%</span>
+            </div>
+            <div class="conf-row">
+              <span class="conf-label" style="color:var(--p-medium);">Medium</span>
+              <div class="conf-bar-bg">
+                <div class="conf-bar-fill" style="width:17%;background:var(--p-medium);"></div>
+              </div>
+              <span class="conf-pct">17%</span>
+            </div>
+            <div class="conf-row" style="margin-bottom:0;">
+              <span class="conf-label" style="color:var(--p-low);">Low</span>
+              <div class="conf-bar-bg">
+                <div class="conf-bar-fill" style="width:5%;background:var(--p-low);"></div>
+              </div>
+              <span class="conf-pct">5%</span>
+            </div>
+          </div>
         </div>
-        <ul class="bullet-list">
-          <li>Email-style interface (Subject + Body) for agents</li>
-          <li>Real-time prediction — <strong style="color:var(--text);">&lt;1 second</strong> response</li>
-          <li>Department routing recommendation per ticket</li>
-          <li>Classification history tracking in the session</li>
-        </ul>
       </div>
     </div>
 
-    <!-- Right: product mockup -->
-    <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
-      <div style="display:flex;align-items:center;gap:6px;padding:10px 16px;background:rgba(20,30,24,0.03);border-bottom:1px solid var(--card-border);">
-        <div style="width:9px;height:9px;border-radius:50%;background:#ff5f57;"></div>
-        <div style="width:9px;height:9px;border-radius:50%;background:#febc2e;"></div>
-        <div style="width:9px;height:9px;border-radius:50%;background:#28c840;"></div>
-        <div style="margin-left:10px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;">localhost:8501 — Support Ticket Classifier</div>
-      </div>
-      <div style="padding:24px;flex:1;display:flex;flex-direction:column;">
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Subject</div>
-        <div style="padding:9px 12px;background:rgba(20,30,24,0.04);border:1px solid var(--card-border);border-radius:7px;font-size:13px;color:#3c453e;margin-bottom:14px;">Payment failed twice, still no access</div>
 
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Description</div>
-        <div style="padding:9px 12px;background:rgba(20,30,24,0.04);border:1px solid var(--card-border);border-radius:7px;font-size:13px;color:#3c453e;margin-bottom:16px;min-height:44px;">My subscription payment failed twice and I still can't access the dashboard. Need this fixed today.</div>
-
-        <div style="display:flex;justify-content:center;margin-bottom:18px;">
-          <div style="padding:9px 30px;background:linear-gradient(135deg,var(--blue),var(--teal));border-radius:8px;font-size:13px;font-weight:700;color:#ffffff;">Classify Ticket →</div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 12px;">
-          <span class="priority p-high">HIGH</span>
-          <span style="font-size:12px;color:var(--muted);">→ routed to <strong style="color:var(--text);">Billing</strong></span>
-        </div>
-
-        <div class="conf-row">
-          <span class="conf-label" style="color:var(--p-high);">High</span>
-          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:78%;background:var(--p-high);"></div></div>
-          <span class="conf-pct">78%</span>
-        </div>
-        <div class="conf-row">
-          <span class="conf-label" style="color:var(--p-medium);">Medium</span>
-          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:17%;background:var(--p-medium);"></div></div>
-          <span class="conf-pct">17%</span>
-        </div>
-        <div class="conf-row" style="margin-bottom:0;">
-          <span class="conf-label" style="color:var(--p-low);">Low</span>
-          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:5%;background:var(--p-low);"></div></div>
-          <span class="conf-pct">5%</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════
      SLIDE 5 — Dataset
 ═══════════════════════════════════════════════════════ -->
-<div class="slide" id="s5">
-  <div class="slide-label">04 — Data</div>
-  <h2>Dataset &amp; <span class="gradient-text">Exploratory Analysis</span></h2>
-  <div style="display:flex;flex-direction:column;gap:20px;margin-top:28px;flex:1;">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;flex:1;">
-      <div class="card card-glow-blue" style="padding:24px;">
-        <h4 style="margin-bottom:14px;">Dataset Facts</h4>
-        <div class="metric-row">
-          <span class="metric-name">Source</span>
-          <span class="metric-value" style="color:var(--blue);font-family:'Inter',sans-serif;font-size:13px;">Kaggle · Multilingual Customer Support Tickets</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-name">Total tickets (raw, bilingual)</span>
-          <span class="metric-value" style="color:var(--teal);">28,587</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-name">English subset (used)</span>
-          <span class="metric-value" style="color:var(--teal);">16,338</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-name">Priority classes</span>
-          <span class="metric-value" style="color:var(--text);">3 (imbalanced)</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-name">Tickets per class</span>
-          <span class="metric-value" style="color:var(--text);">3,374 – 6,618</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-name">Train / Val / Test</span>
-          <span class="metric-value" style="color:var(--orange);">11,436 / 2,451 / 2,451</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-name">Split strategy</span>
-          <span class="metric-value" style="color:var(--text);">Stratified · random_state=42</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-name">Exact duplicates</span>
-          <span class="metric-value" style="color:var(--green);">0 found (post EN filter)</span>
-        </div>
-      </div>
-      <!-- class distribution visual -->
-      <div class="card card-glow-teal" style="padding:24px;">
-        <h4 style="margin-bottom:16px;color:var(--teal);">Class Balance (class weights applied)</h4>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px;"><span class="priority p-low" style="font-size:11px;">Low</span><span style="color:var(--muted);">3,374 tickets · 21%</span></div>
-            <div style="height:10px;background:rgba(20,30,24,0.08);border-radius:5px;overflow:hidden;"><div style="width:21%;height:100%;background:var(--p-low);border-radius:5px;"></div></div>
+    <div class="slide" id="s5">
+      <div class="slide-label">04 — Data</div>
+      <h2>Dataset &amp; <span class="gradient-text">Exploratory Analysis</span></h2>
+      <div style="display:flex;flex-direction:column;gap:20px;margin-top:28px;flex:1;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;flex:1;">
+          <div class="card card-glow-blue" style="padding:24px;">
+            <h4 style="margin-bottom:14px;">Dataset Facts</h4>
+            <div class="metric-row">
+              <span class="metric-name">Source</span>
+              <span class="metric-value" style="color:var(--blue);font-family:'Inter',sans-serif;font-size:13px;">Kaggle
+                · Multilingual Customer Support Tickets</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">Total tickets (raw, bilingual)</span>
+              <span class="metric-value" style="color:var(--teal);">28,587</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">English subset (used)</span>
+              <span class="metric-value" style="color:var(--teal);">16,338</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">Priority classes</span>
+              <span class="metric-value" style="color:var(--text);">3 (imbalanced)</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">Tickets per class</span>
+              <span class="metric-value" style="color:var(--text);">3,374 – 6,618</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">Train / Val / Test</span>
+              <span class="metric-value" style="color:var(--orange);">11,436 / 2,451 / 2,451</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">Split strategy</span>
+              <span class="metric-value" style="color:var(--text);">Stratified · random_state=42</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">Exact duplicates</span>
+              <span class="metric-value" style="color:var(--green);">0 found (post EN filter)</span>
+            </div>
           </div>
-          <div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px;"><span class="priority p-medium" style="font-size:11px;">Medium</span><span style="color:var(--muted);">6,618 tickets · 41%</span></div>
-            <div style="height:10px;background:rgba(20,30,24,0.08);border-radius:5px;overflow:hidden;"><div style="width:41%;height:100%;background:var(--p-medium);border-radius:5px;"></div></div>
+          <!-- class distribution visual -->
+          <div class="card card-glow-teal" style="padding:24px;">
+            <h4 style="margin-bottom:16px;color:var(--teal);">Class Balance (class weights applied)</h4>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px;"><span
+                    class="priority p-low" style="font-size:11px;">Low</span><span style="color:var(--muted);">3,374
+                    tickets · 21%</span></div>
+                <div style="height:10px;background:rgba(20,30,24,0.08);border-radius:5px;overflow:hidden;">
+                  <div style="width:21%;height:100%;background:var(--p-low);border-radius:5px;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px;"><span
+                    class="priority p-medium" style="font-size:11px;">Medium</span><span
+                    style="color:var(--muted);">6,618 tickets · 41%</span></div>
+                <div style="height:10px;background:rgba(20,30,24,0.08);border-radius:5px;overflow:hidden;">
+                  <div style="width:41%;height:100%;background:var(--p-medium);border-radius:5px;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px;"><span
+                    class="priority p-high" style="font-size:11px;">High</span><span style="color:var(--muted);">6,346
+                    tickets · 39%</span></div>
+                <div style="height:10px;background:rgba(20,30,24,0.08);border-radius:5px;overflow:hidden;">
+                  <div style="width:39%;height:100%;background:var(--p-high);border-radius:5px;"></div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px;"><span class="priority p-high" style="font-size:11px;">High</span><span style="color:var(--muted);">6,346 tickets · 39%</span></div>
-            <div style="height:10px;background:rgba(20,30,24,0.08);border-radius:5px;overflow:hidden;"><div style="width:39%;height:100%;background:var(--p-high);border-radius:5px;"></div></div>
+        </div>
+
+        <!-- Key EDA Findings — full width -->
+        <div class="card" style="padding:22px 26px;">
+          <h4 style="margin-bottom:16px;">Key EDA Findings</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;">
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="flex-shrink:0;width:6px;height:6px;border-radius:50%;background:var(--blue);margin-top:7px;">
+              </div>
+              <p style="font-size:13px;color:#3c453e;line-height:1.55;">Bilingual dataset (EN/DE) — filtered to <strong
+                  style="color:var(--blue);">English only</strong> (16,338 of 28,587 rows)</p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div
+                style="flex-shrink:0;width:6px;height:6px;align-items:flex-start;border-radius:50%;background:var(--blue);margin-top:7px;">
+              </div>
+              <p style="font-size:13px;color:#3c453e;line-height:1.55;">Classes are <strong
+                  style="color:var(--orange);">imbalanced</strong> (Low 21% / Medium 41% / High 39%) — class weights
+                used in training</p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="flex-shrink:0;width:6px;height:6px;border-radius:50%;background:var(--blue);margin-top:7px;">
+              </div>
+              <p style="font-size:13px;color:#3c453e;line-height:1.55;">Vocabulary size after cleaning: <strong
+                  style="color:var(--teal);">5,726 tokens</strong></p>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Key EDA Findings — full width -->
-    <div class="card" style="padding:22px 26px;">
-      <h4 style="margin-bottom:16px;">Key EDA Findings</h4>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;">
-        <div style="display:flex;gap:10px;align-items:flex-start;">
-          <div style="flex-shrink:0;width:6px;height:6px;border-radius:50%;background:var(--blue);margin-top:7px;"></div>
-          <p style="font-size:13px;color:#3c453e;line-height:1.55;">Bilingual dataset (EN/DE) — filtered to <strong style="color:var(--blue);">English only</strong> (16,338 of 28,587 rows)</p>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;">
-          <div style="flex-shrink:0;width:6px;height:6px;align-items:flex-start;border-radius:50%;background:var(--blue);margin-top:7px;"></div>
-          <p style="font-size:13px;color:#3c453e;line-height:1.55;">Classes are <strong style="color:var(--orange);">imbalanced</strong> (Low 21% / Medium 41% / High 39%) — class weights used in training</p>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;">
-          <div style="flex-shrink:0;width:6px;height:6px;border-radius:50%;background:var(--blue);margin-top:7px;"></div>
-          <p style="font-size:13px;color:#3c453e;line-height:1.55;">Vocabulary size after cleaning: <strong style="color:var(--teal);">5,726 tokens</strong></p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-
-<!-- ═══════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════
      SLIDE 6 — Preprocessing Pipeline
 ═══════════════════════════════════════════════════════ -->
-<div class="slide" id="s6">
-  <div class="slide-label">05 — Data Preprocessing</div>
-  <h2>From Raw Text to <span class="gradient-text">Model Input</span></h2>
+    <div class="slide" id="s6">
+      <div class="slide-label">05 — Data Preprocessing</div>
+      <h2>From Raw Text to <span class="gradient-text">Model Input</span></h2>
 
-  <!-- 6-step horizontal pipeline -->
-  <div style="display:flex;align-items:stretch;gap:6px;margin-top:26px;">
-    <div style="flex:1;padding:14px 12px;background:rgba(31,122,77,0.08);border:1px solid rgba(31,122,77,0.25);border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;">
-      <div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--blue);color:var(--blue);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">1</div>
-      <div style="font-size:13px;font-weight:700;">Raw Text</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.4;">Bilingual Subject + Body from CSV</div>
-    </div>
-    <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;flex-shrink:0;">›</div>
-    <div style="flex:1;padding:14px 12px;background:rgba(47,158,100,0.08);border:1px solid rgba(47,158,100,0.25);border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;">
-      <div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--teal);color:var(--teal);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">2</div>
-      <div style="font-size:13px;font-weight:700;">Filter &amp; Combine</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.4;">Keep English only, merge Subject + Body</div>
-    </div>
-    <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;flex-shrink:0;">›</div>
-    <div style="flex:1;padding:14px 12px;background:rgba(140,150,143,0.08);border:1px solid rgba(140,150,143,0.25);border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;">
-      <div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--purple);color:var(--purple);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">3</div>
-      <div style="font-size:13px;font-weight:700;">Deduplicate</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.4;">Drop exact-text dupes before the split</div>
-    </div>
-    <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;flex-shrink:0;">›</div>
-    <div style="flex:1;padding:14px 12px;background:rgba(91,105,97,0.08);border:1px solid rgba(91,105,97,0.25);border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;">
-      <div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--orange);color:var(--orange);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">4</div>
-      <div style="font-size:13px;font-weight:700;">Vectorize</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.4;">Keras TextVectorization — vocab 5,726</div>
-    </div>
-    <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;flex-shrink:0;">›</div>
-    <div style="flex:1;padding:14px 12px;background:rgba(111,174,140,0.08);border:1px solid rgba(111,174,140,0.25);border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;">
-      <div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--green);color:var(--green);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">5</div>
-      <div style="font-size:13px;font-weight:700;">Pad</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.4;">Pre-pad to MAX_SEQ_LEN = 57</div>
-    </div>
-    <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;flex-shrink:0;">›</div>
-    <div style="flex:1;padding:14px 12px;background:rgba(31,122,77,0.08);border:1px solid rgba(31,122,77,0.25);border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;">
-      <div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--blue);color:var(--blue);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">6</div>
-      <div style="font-size:13px;font-weight:700;">Encode Labels</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.4;">Low=0 · Medium=1 · High=2</div>
-    </div>
-  </div>
+      <!-- 6-step horizontal pipeline -->
+      <div style="display:flex;align-items:stretch;gap:6px;margin-top:26px;">
+        <div
+          style="flex:1;padding:14px 12px;background:rgba(31,122,77,0.08);border:1px solid rgba(31,122,77,0.25);border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;">
+          <div
+            style="width:24px;height:24px;border-radius:50%;border:2px solid var(--blue);color:var(--blue);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">
+            1</div>
+          <div style="font-size:13px;font-weight:700;">Raw Text</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.4;">Bilingual Subject + Body from CSV</div>
+        </div>
+        <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;flex-shrink:0;">›</div>
+        <div
+          style="flex:1;padding:14px 12px;background:rgba(47,158,100,0.08);border:1px solid rgba(47,158,100,0.25);border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;">
+          <div
+            style="width:24px;height:24px;border-radius:50%;border:2px solid var(--teal);color:var(--teal);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">
+            2</div>
+          <div style="font-size:13px;font-weight:700;">Filter &amp; Combine</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.4;">Keep English only, merge Subject + Body</div>
+        </div>
+        <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;flex-shrink:0;">›</div>
+        <div
+          style="flex:1;padding:14px 12px;background:rgba(140,150,143,0.08);border:1px solid rgba(140,150,143,0.25);border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;">
+          <div
+            style="width:24px;height:24px;border-radius:50%;border:2px solid var(--purple);color:var(--purple);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">
+            3</div>
+          <div style="font-size:13px;font-weight:700;">Deduplicate</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.4;">Drop exact-text dupes before the split</div>
+        </div>
+        <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;flex-shrink:0;">›</div>
+        <div
+          style="flex:1;padding:14px 12px;background:rgba(91,105,97,0.08);border:1px solid rgba(91,105,97,0.25);border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;">
+          <div
+            style="width:24px;height:24px;border-radius:50%;border:2px solid var(--orange);color:var(--orange);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">
+            4</div>
+          <div style="font-size:13px;font-weight:700;">Vectorize</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.4;">Keras TextVectorization — vocab 5,726</div>
+        </div>
+        <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;flex-shrink:0;">›</div>
+        <div
+          style="flex:1;padding:14px 12px;background:rgba(111,174,140,0.08);border:1px solid rgba(111,174,140,0.25);border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;">
+          <div
+            style="width:24px;height:24px;border-radius:50%;border:2px solid var(--green);color:var(--green);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">
+            5</div>
+          <div style="font-size:13px;font-weight:700;">Pad</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.4;">Pre-pad to MAX_SEQ_LEN = 57</div>
+        </div>
+        <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;flex-shrink:0;">›</div>
+        <div
+          style="flex:1;padding:14px 12px;background:rgba(31,122,77,0.08);border:1px solid rgba(31,122,77,0.25);border-radius:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;">
+          <div
+            style="width:24px;height:24px;border-radius:50%;border:2px solid var(--blue);color:var(--blue);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">
+            6</div>
+          <div style="font-size:13px;font-weight:700;">Encode Labels</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.4;">Low=0 · Medium=1 · High=2</div>
+        </div>
+      </div>
 
-  <!-- Bottom: transformation trace + config stats -->
-  <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:20px;margin-top:20px;flex:1;">
-    <div class="card card-glow-teal" style="padding:22px;">
-      <h4 style="margin-bottom:16px;color:var(--teal);">Transformation Trace — one ticket</h4>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div>
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Raw (Subject + Body)</div>
-          <div class="code" style="font-size:12px;">"Payment failed twice - still no access to my account, please help"</div>
+      <!-- Bottom: transformation trace + config stats -->
+      <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:20px;margin-top:20px;flex:1;">
+        <div class="card card-glow-teal" style="padding:22px;">
+          <h4 style="margin-bottom:16px;color:var(--teal);">Transformation Trace — one ticket</h4>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div>
+              <div
+                style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">
+                Raw (Subject + Body)</div>
+              <div class="code" style="font-size:12px;">"Payment failed twice - still no access to my account, please
+                help"</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;">
+              <span>↓ filter EN &amp; combine</span>
+            </div>
+            <div>
+              <div
+                style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">
+                Vectorized (lowercase, no punctuation)</div>
+              <div class="code" style="font-size:12px;">"payment failed twice still no access to my account please help"
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;">
+              <span>↓ tokenize → pad</span>
+            </div>
+            <div>
+              <div
+                style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">
+                Model input</div>
+              <div class="code" style="font-size:12px;">[<span class="n">23</span>, <span class="n">812</span>, <span
+                  class="n">345</span>, <span class="n">901</span>, <span class="n">12</span>, <span
+                  class="n">67</span>, <span class="n">0</span>, <span class="n">0</span>, …] <span class="c">// shape
+                  (57,)</span></div>
+            </div>
+          </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;">
-          <span>↓ filter EN &amp; combine</span>
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Vectorized (lowercase, no punctuation)</div>
-          <div class="code" style="font-size:12px;">"payment failed twice still no access to my account please help"</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;">
-          <span>↓ tokenize → pad</span>
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Model input</div>
-          <div class="code" style="font-size:12px;">[<span class="n">23</span>, <span class="n">812</span>, <span class="n">345</span>, <span class="n">901</span>, <span class="n">12</span>, <span class="n">67</span>, <span class="n">0</span>, <span class="n">0</span>, …] <span class="c">// shape (57,)</span></div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="card"
+            style="padding:18px 20px;flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;">
+            <h4>Key Constants</h4>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;"><span
+                  style="font-size:12px;color:var(--muted);">VOCAB_SIZE</span><span
+                  style="font-size:18px;font-weight:800;color:var(--blue);">5,726</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;"><span
+                  style="font-size:12px;color:var(--muted);">MAX_SEQ_LEN</span><span
+                  style="font-size:18px;font-weight:800;color:var(--teal);">57</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;"><span
+                  style="font-size:12px;color:var(--muted);">NUM_CLASSES</span><span
+                  style="font-size:18px;font-weight:800;color:var(--orange);">3</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;"><span
+                  style="font-size:12px;color:var(--muted);">RANDOM_STATE</span><span
+                  style="font-size:18px;font-weight:800;color:var(--purple);">42</span></div>
+            </div>
+          </div>
+          <div class="card" style="padding:16px 18px;">
+            <p style="font-size:12px;color:#3c453e;line-height:1.6;">Dataset is bilingual (EN/DE) — step 2 filters to
+              English only, since the model is trained on a single language.</p>
+          </div>
         </div>
       </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <div class="card" style="padding:18px 20px;flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;">
-        <h4>Key Constants</h4>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:var(--muted);">VOCAB_SIZE</span><span style="font-size:18px;font-weight:800;color:var(--blue);">5,726</span></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:var(--muted);">MAX_SEQ_LEN</span><span style="font-size:18px;font-weight:800;color:var(--teal);">57</span></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:var(--muted);">NUM_CLASSES</span><span style="font-size:18px;font-weight:800;color:var(--orange);">3</span></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:var(--muted);">RANDOM_STATE</span><span style="font-size:18px;font-weight:800;color:var(--purple);">42</span></div>
-        </div>
-      </div>
-      <div class="card" style="padding:16px 18px;">
-        <p style="font-size:12px;color:#3c453e;line-height:1.6;">Dataset is bilingual (EN/DE) — step 2 filters to English only, since the model is trained on a single language.</p>
-      </div>
-    </div>
-  </div>
-</div>
 
-
-<!-- ═══════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════
      SLIDE 7 — Why Bi-LSTM
 ═══════════════════════════════════════════════════════ -->
-<div class="slide" id="s7">
-  <div class="slide-label">06 — Architecture Choice</div>
-  <h2>Why <span class="gradient-text">Bidirectional LSTM?</span></h2>
+    <div class="slide" id="s7">
+      <div class="slide-label">06 — Architecture Choice</div>
+      <h2>Why <span class="gradient-text">Bidirectional LSTM?</span></h2>
 
-  <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:24px;margin-top:24px;flex:1;">
+      <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:24px;margin-top:24px;flex:1;">
 
-    <!-- Left: stacked model option cards -->
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <div style="padding:14px 16px;background:rgba(20,30,24,0.03);border:1px solid var(--card-border);border-radius:12px;display:flex;align-items:center;justify-content:space-between;">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:#3c453e;">CNN (text)</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Fixed context window only</div>
+        <!-- Left: stacked model option cards -->
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div
+            style="padding:14px 16px;background:rgba(20,30,24,0.03);border:1px solid var(--card-border);border-radius:12px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#3c453e;">CNN (text)</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;">Fixed context window only</div>
+            </div>
+            <span
+              style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(91,105,97,0.12);color:var(--orange);border:1px solid rgba(91,105,97,0.25);">⚠
+              Partial</span>
+          </div>
+          <div
+            style="padding:14px 16px;background:rgba(20,30,24,0.03);border:1px solid var(--card-border);border-radius:12px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#3c453e;">Uni-directional LSTM</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;">Sees past context only</div>
+            </div>
+            <span
+              style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(91,105,97,0.12);color:var(--orange);border:1px solid rgba(91,105,97,0.25);">⚠
+              Partial</span>
+          </div>
+          <div
+            style="padding:16px;background:rgba(31,122,77,0.08);border:1px solid rgba(31,122,77,0.35);border-radius:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 0 20px rgba(31,122,77,0.1);">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--text);">Bidirectional LSTM</div>
+              <div style="font-size:11px;color:var(--blue);margin-top:3px;">Full context · variable length · in scope
+              </div>
+            </div>
+            <span
+              style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(111,174,140,0.12);color:var(--green);border:1px solid rgba(111,174,140,0.25);">✓
+              Chosen</span>
+          </div>
+          <div
+            style="padding:14px 16px;background:rgba(20,30,24,0.02);border:1px solid var(--card-border);border-radius:10px;font-size:12px;color:var(--muted);line-height:1.6;margin-top:4px;">
+            The brief requires ANN / CNN / RNN. Bi-LSTM delivers near-transformer context at a fraction of the
+            parameters.
+          </div>
         </div>
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(91,105,97,0.12);color:var(--orange);border:1px solid rgba(91,105,97,0.25);">⚠ Partial</span>
-      </div>
-      <div style="padding:14px 16px;background:rgba(20,30,24,0.03);border:1px solid var(--card-border);border-radius:12px;display:flex;align-items:center;justify-content:space-between;">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:#3c453e;">Uni-directional LSTM</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Sees past context only</div>
+
+        <!-- Right: bidirectional diagram + units -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card card-glow-blue" style="padding:26px;flex:1;">
+            <h4 style="margin-bottom:20px;color:var(--blue);">How It Reads a Ticket</h4>
+
+            <!-- Forward pass labels -->
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:4px;">
+              <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);">
+                h₁→</div>
+              <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);">
+                h₂→</div>
+              <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);">
+                h₃→</div>
+              <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);">
+                h₄→</div>
+              <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);">
+                h₅→</div>
+            </div>
+
+            <!-- Word tokens -->
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:4px;">
+              <div
+                style="text-align:center;padding:10px 4px;background:rgba(20,30,24,0.05);border:1px solid var(--card-border);border-radius:8px;font-size:13px;font-weight:600;">
+                payment</div>
+              <div
+                style="text-align:center;padding:10px 4px;background:rgba(20,30,24,0.05);border:1px solid var(--card-border);border-radius:8px;font-size:13px;font-weight:600;">
+                failed</div>
+              <div
+                style="text-align:center;padding:10px 4px;background:rgba(31,122,77,0.1);border:1px solid rgba(31,122,77,0.3);border-radius:8px;font-size:13px;font-weight:700;color:var(--blue);">
+                twice</div>
+              <div
+                style="text-align:center;padding:10px 4px;background:rgba(20,30,24,0.05);border:1px solid var(--card-border);border-radius:8px;font-size:13px;font-weight:600;">
+                no</div>
+              <div
+                style="text-align:center;padding:10px 4px;background:rgba(20,30,24,0.05);border:1px solid var(--card-border);border-radius:8px;font-size:13px;font-weight:600;">
+                access</div>
+            </div>
+
+            <!-- Backward pass labels -->
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:18px;">
+              <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--teal);">
+                ←h₁</div>
+              <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--teal);">
+                ←h₂</div>
+              <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--teal);">
+                ←h₃</div>
+              <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--teal);">
+                ←h₄</div>
+              <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--teal);">
+                ←h₅</div>
+            </div>
+
+            <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px;">At every token, the model
+              has both past context (→) and future context (←) — the word "twice" carries much more weight when the
+              model already knows the sentence ends with "no access".</p>
+
+            <div style="display:flex;gap:8px;">
+              <div
+                style="flex:1;padding:10px;background:rgba(31,122,77,0.08);border-radius:8px;text-align:center;border:1px solid rgba(31,122,77,0.2);">
+                <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">→ Forward LSTM</div>
+                <div style="font-size:14px;font-weight:700;color:var(--blue);">128 units</div>
+              </div>
+              <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;">+</div>
+              <div
+                style="flex:1;padding:10px;background:rgba(47,158,100,0.08);border-radius:8px;text-align:center;border:1px solid rgba(47,158,100,0.2);">
+                <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">← Backward LSTM</div>
+                <div style="font-size:14px;font-weight:700;color:var(--teal);">128 units</div>
+              </div>
+              <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;">=</div>
+              <div
+                style="flex:1;padding:10px;background:rgba(140,150,143,0.08);border-radius:8px;text-align:center;border:1px solid rgba(140,150,143,0.2);">
+                <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">Concatenated</div>
+                <div style="font-size:14px;font-weight:700;color:var(--purple);">256 total</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(91,105,97,0.12);color:var(--orange);border:1px solid rgba(91,105,97,0.25);">⚠ Partial</span>
-      </div>
-      <div style="padding:16px;background:rgba(31,122,77,0.08);border:1px solid rgba(31,122,77,0.35);border-radius:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 0 20px rgba(31,122,77,0.1);">
-        <div>
-          <div style="font-size:14px;font-weight:700;color:var(--text);">Bidirectional LSTM</div>
-          <div style="font-size:11px;color:var(--blue);margin-top:3px;">Full context · variable length · in scope</div>
-        </div>
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(111,174,140,0.12);color:var(--green);border:1px solid rgba(111,174,140,0.25);">✓ Chosen</span>
-      </div>
-      <div style="padding:14px 16px;background:rgba(20,30,24,0.02);border:1px solid var(--card-border);border-radius:10px;font-size:12px;color:var(--muted);line-height:1.6;margin-top:4px;">
-        The brief requires ANN / CNN / RNN — transformers are out of scope. Bi-LSTM delivers near-transformer context at a fraction of the parameters.
       </div>
     </div>
 
-    <!-- Right: bidirectional diagram + units -->
-    <div style="display:flex;flex-direction:column;gap:16px;">
-      <div class="card card-glow-blue" style="padding:26px;flex:1;">
-        <h4 style="margin-bottom:20px;color:var(--blue);">How It Reads a Ticket</h4>
 
-        <!-- Forward pass labels -->
-        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:4px;">
-          <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);">h₁→</div>
-          <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);">h₂→</div>
-          <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);">h₃→</div>
-          <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);">h₄→</div>
-          <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);">h₅→</div>
-        </div>
-
-        <!-- Word tokens -->
-        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:4px;">
-          <div style="text-align:center;padding:10px 4px;background:rgba(20,30,24,0.05);border:1px solid var(--card-border);border-radius:8px;font-size:13px;font-weight:600;">payment</div>
-          <div style="text-align:center;padding:10px 4px;background:rgba(20,30,24,0.05);border:1px solid var(--card-border);border-radius:8px;font-size:13px;font-weight:600;">failed</div>
-          <div style="text-align:center;padding:10px 4px;background:rgba(31,122,77,0.1);border:1px solid rgba(31,122,77,0.3);border-radius:8px;font-size:13px;font-weight:700;color:var(--blue);">twice</div>
-          <div style="text-align:center;padding:10px 4px;background:rgba(20,30,24,0.05);border:1px solid var(--card-border);border-radius:8px;font-size:13px;font-weight:600;">no</div>
-          <div style="text-align:center;padding:10px 4px;background:rgba(20,30,24,0.05);border:1px solid var(--card-border);border-radius:8px;font-size:13px;font-weight:600;">access</div>
-        </div>
-
-        <!-- Backward pass labels -->
-        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:18px;">
-          <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--teal);">←h₁</div>
-          <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--teal);">←h₂</div>
-          <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--teal);">←h₃</div>
-          <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--teal);">←h₄</div>
-          <div style="text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--teal);">←h₅</div>
-        </div>
-
-        <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px;">At every token, the model has both past context (→) and future context (←) — the word "twice" carries much more weight when the model already knows the sentence ends with "no access".</p>
-
-        <div style="display:flex;gap:8px;">
-          <div style="flex:1;padding:10px;background:rgba(31,122,77,0.08);border-radius:8px;text-align:center;border:1px solid rgba(31,122,77,0.2);">
-            <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">→ Forward LSTM</div>
-            <div style="font-size:14px;font-weight:700;color:var(--blue);">128 units</div>
-          </div>
-          <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;">+</div>
-          <div style="flex:1;padding:10px;background:rgba(47,158,100,0.08);border-radius:8px;text-align:center;border:1px solid rgba(47,158,100,0.2);">
-            <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">← Backward LSTM</div>
-            <div style="font-size:14px;font-weight:700;color:var(--teal);">128 units</div>
-          </div>
-          <div style="display:flex;align-items:center;color:var(--muted);font-size:16px;">=</div>
-          <div style="flex:1;padding:10px;background:rgba(140,150,143,0.08);border-radius:8px;text-align:center;border:1px solid rgba(140,150,143,0.2);">
-            <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">Concatenated</div>
-            <div style="font-size:14px;font-weight:700;color:var(--purple);">256 total</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════
      SLIDE 8 — Model Architecture (diagram)
 ═══════════════════════════════════════════════════════ -->
-<div class="slide" id="s8">
-  <div class="slide-label">07 — Model Architecture</div>
-  <h2>Bi-LSTM <span class="gradient-text">Layer Stack</span></h2>
-  <div style="display:grid;grid-template-columns:1fr 1.1fr;gap:28px;margin-top:24px;flex:1;">
+    <div class="slide" id="s8">
+      <div class="slide-label">07 — Model Architecture</div>
+      <h2>Bi-LSTM <span class="gradient-text">Layer Stack</span></h2>
+      <div style="display:grid;grid-template-columns:1fr 1.1fr;gap:28px;margin-top:24px;flex:1;">
 
-    <!-- Left: diagram -->
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;">
-      <!-- Input -->
-      <div class="arch-box" style="background:rgba(31,122,77,0.1);border:1px solid rgba(31,122,77,0.3);width:220px;">
-        <div style="color:var(--blue);font-size:13px;font-weight:700;">Input</div>
-        <div class="arch-sub">Tokenised ticket text</div>
-        <div class="arch-sub">shape: (batch, 57)</div>
-      </div>
-      <div style="height:18px;width:2px;background:linear-gradient(to bottom,rgba(31,122,77,0.5),rgba(47,158,100,0.3));"></div>
+        <!-- Left: diagram -->
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;">
+          <!-- Input -->
+          <div class="arch-box"
+            style="background:rgba(31,122,77,0.1);border:1px solid rgba(31,122,77,0.3);width:220px;">
+            <div style="color:var(--blue);font-size:13px;font-weight:700;">Input</div>
+            <div class="arch-sub">Tokenised ticket text</div>
+            <div class="arch-sub">shape: (batch, 57)</div>
+          </div>
+          <div
+            style="height:18px;width:2px;background:linear-gradient(to bottom,rgba(31,122,77,0.5),rgba(47,158,100,0.3));">
+          </div>
 
-      <!-- Embedding -->
-      <div class="arch-box" style="background:rgba(47,158,100,0.1);border:1px solid rgba(47,158,100,0.3);width:220px;">
-        <div style="color:var(--teal);font-size:13px;font-weight:700;">Embedding Layer</div>
-        <div class="arch-sub">vocab 5,726 → 64-dim vectors</div>
-        <div class="arch-sub">Trainable, no pre-training</div>
-      </div>
-      <div style="height:18px;width:2px;background:linear-gradient(to bottom,rgba(47,158,100,0.3),rgba(140,150,143,0.4));"></div>
+          <!-- Embedding -->
+          <div class="arch-box"
+            style="background:rgba(47,158,100,0.1);border:1px solid rgba(47,158,100,0.3);width:220px;">
+            <div style="color:var(--teal);font-size:13px;font-weight:700;">Embedding Layer</div>
+            <div class="arch-sub">vocab 5,726 → 64-dim vectors</div>
+            <div class="arch-sub">Trainable, no pre-training</div>
+          </div>
+          <div
+            style="height:18px;width:2px;background:linear-gradient(to bottom,rgba(47,158,100,0.3),rgba(140,150,143,0.4));">
+          </div>
 
-      <!-- Bi-LSTM -->
-      <div class="arch-box" style="background:rgba(140,150,143,0.1);border:1px solid rgba(140,150,143,0.3);width:260px;">
-        <div style="color:var(--purple);font-size:13px;font-weight:700;">Bidirectional LSTM</div>
-        <div style="display:flex;gap:8px;margin-top:5px;">
-          <span style="font-size:11px;padding:3px 8px;background:rgba(31,122,77,0.15);border-radius:4px;color:var(--blue);">→ 128 fwd</span>
-          <span style="font-size:11px;padding:3px 8px;background:rgba(47,158,100,0.15);border-radius:4px;color:var(--teal);">← 128 bwd</span>
+          <!-- Bi-LSTM -->
+          <div class="arch-box"
+            style="background:rgba(140,150,143,0.1);border:1px solid rgba(140,150,143,0.3);width:260px;">
+            <div style="color:var(--purple);font-size:13px;font-weight:700;">Bidirectional LSTM</div>
+            <div style="display:flex;gap:8px;margin-top:5px;">
+              <span
+                style="font-size:11px;padding:3px 8px;background:rgba(31,122,77,0.15);border-radius:4px;color:var(--blue);">→
+                128 fwd</span>
+              <span
+                style="font-size:11px;padding:3px 8px;background:rgba(47,158,100,0.15);border-radius:4px;color:var(--teal);">←
+                128 bwd</span>
+            </div>
+            <div class="arch-sub">256 total hidden units</div>
+          </div>
+          <div
+            style="height:18px;width:2px;background:linear-gradient(to bottom,rgba(140,150,143,0.4),rgba(91,105,97,0.4));">
+          </div>
+
+          <!-- Dropout -->
+          <div class="arch-box"
+            style="background:rgba(91,105,97,0.08);border:1px solid rgba(91,105,97,0.25);width:220px;">
+            <div style="color:var(--orange);font-size:13px;font-weight:700;">Dropout (30%)</div>
+            <div class="arch-sub">Randomly zeroes 30% of neurons</div>
+            <div class="arch-sub">Prevents overfitting</div>
+          </div>
+          <div
+            style="height:18px;width:2px;background:linear-gradient(to bottom,rgba(91,105,97,0.4),rgba(111,174,140,0.4));">
+          </div>
+
+          <!-- Dense output -->
+          <div class="arch-box"
+            style="background:rgba(111,174,140,0.1);border:1px solid rgba(111,174,140,0.3);width:220px;">
+            <div style="color:var(--green);font-size:13px;font-weight:700;">Dense + Softmax</div>
+            <div class="arch-sub">3 output neurons</div>
+            <div style="display:flex;gap:5px;margin-top:6px;">
+              <span class="priority p-low" style="font-size:10px;padding:2px 8px;">Low</span>
+              <span class="priority p-medium" style="font-size:10px;padding:2px 8px;">Med</span>
+              <span class="priority p-high" style="font-size:10px;padding:2px 8px;">High</span>
+            </div>
+          </div>
         </div>
-        <div class="arch-sub">256 total hidden units</div>
-      </div>
-      <div style="height:18px;width:2px;background:linear-gradient(to bottom,rgba(140,150,143,0.4),rgba(91,105,97,0.4));"></div>
 
-      <!-- Dropout -->
-      <div class="arch-box" style="background:rgba(91,105,97,0.08);border:1px solid rgba(91,105,97,0.25);width:220px;">
-        <div style="color:var(--orange);font-size:13px;font-weight:700;">Dropout (30%)</div>
-        <div class="arch-sub">Randomly zeroes 30% of neurons</div>
-        <div class="arch-sub">Prevents overfitting</div>
-      </div>
-      <div style="height:18px;width:2px;background:linear-gradient(to bottom,rgba(91,105,97,0.4),rgba(111,174,140,0.4));"></div>
-
-      <!-- Dense output -->
-      <div class="arch-box" style="background:rgba(111,174,140,0.1);border:1px solid rgba(111,174,140,0.3);width:220px;">
-        <div style="color:var(--green);font-size:13px;font-weight:700;">Dense + Softmax</div>
-        <div class="arch-sub">3 output neurons</div>
-        <div style="display:flex;gap:5px;margin-top:6px;">
-          <span class="priority p-low" style="font-size:10px;padding:2px 8px;">Low</span>
-          <span class="priority p-medium" style="font-size:10px;padding:2px 8px;">Med</span>
-          <span class="priority p-high" style="font-size:10px;padding:2px 8px;">High</span>
+        <!-- Right: hyperparameter table -->
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="card card-glow-purple" style="padding:22px;">
+            <h4 style="margin-bottom:14px;color:var(--purple);">Hyperparameter Justification</h4>
+            <div class="metric-row">
+              <span class="metric-name">Embedding dim: 64</span>
+              <span style="font-size:12px;color:#3c453e;max-width:200px;text-align:right;line-height:1.4;">Balances
+                expressiveness vs. parameter count for 5.7K vocab</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">LSTM units: 128×2</span>
+              <span style="font-size:12px;color:#3c453e;max-width:200px;text-align:right;line-height:1.4;">Enough
+                capacity to capture priority-relevant patterns</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">Dropout: 30%</span>
+              <span style="font-size:12px;color:#3c453e;max-width:200px;text-align:right;line-height:1.4;">Prevents
+                memorisation on ~11.4K training samples</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">Optimizer: Adam</span>
+              <span style="font-size:12px;color:#3c453e;max-width:200px;text-align:right;line-height:1.4;">Adaptive LR;
+                converges reliably on sequence tasks</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">Loss: Sparse CE</span>
+              <span style="font-size:12px;color:#3c453e;max-width:200px;text-align:right;line-height:1.4;">Standard for
+                integer-encoded multi-class classification</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">Sequence Length: 57</span>
+              <span style="font-size:12px;color:#3c453e;max-width:200px;text-align:right;line-height:1.4;">Fixed
+                sequence cap; tickets over 57 tokens truncated at the end</span>
+            </div>
+          </div>
+          <div class="card" style="padding:20px;">
+            <h4 style="margin-bottom:12px;">Tech Stack</h4>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <span class="tag tag-blue">TensorFlow</span>
+              <span class="tag tag-teal">Keras</span>
+              <span class="tag tag-orange">Keras-Tuner</span>
+              <span class="tag tag-purple">scikit-learn</span>
+              <span class="tag tag-green">NLTK</span>
+              <span class="tag tag-blue">pandas / numpy</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Right: hyperparameter table -->
-    <div style="display:flex;flex-direction:column;gap:14px;">
-      <div class="card card-glow-purple" style="padding:22px;">
-        <h4 style="margin-bottom:14px;color:var(--purple);">Hyperparameter Justification</h4>
-        <div class="metric-row">
-          <span class="metric-name">Embedding dim: 64</span>
-          <span style="font-size:12px;color:#3c453e;max-width:200px;text-align:right;line-height:1.4;">Balances expressiveness vs. parameter count for 5.7K vocab</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-name">LSTM units: 128×2</span>
-          <span style="font-size:12px;color:#3c453e;max-width:200px;text-align:right;line-height:1.4;">Enough capacity to capture priority-relevant patterns</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-name">Dropout: 30%</span>
-          <span style="font-size:12px;color:#3c453e;max-width:200px;text-align:right;line-height:1.4;">Prevents memorisation on ~11.4K training samples</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-name">Optimizer: Adam</span>
-          <span style="font-size:12px;color:#3c453e;max-width:200px;text-align:right;line-height:1.4;">Adaptive LR; converges reliably on sequence tasks</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-name">Loss: Sparse CE</span>
-          <span style="font-size:12px;color:#3c453e;max-width:200px;text-align:right;line-height:1.4;">Standard for integer-encoded multi-class classification</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-name">MAX_SEQ_LEN: 57</span>
-          <span style="font-size:12px;color:#3c453e;max-width:200px;text-align:right;line-height:1.4;">Fixed sequence cap; tickets over 57 tokens truncated at the end</span>
-        </div>
-      </div>
-      <div class="card" style="padding:20px;">
-        <h4 style="margin-bottom:12px;">Tech Stack</h4>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          <span class="tag tag-blue">TensorFlow 2.x</span>
-          <span class="tag tag-teal">Keras</span>
-          <span class="tag tag-orange">Keras-Tuner</span>
-          <span class="tag tag-purple">scikit-learn</span>
-          <span class="tag tag-green">NLTK</span>
-          <span class="tag tag-blue">pandas / numpy</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-
-<!-- ═══════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════
      SLIDE 9 — Training Results
 ═══════════════════════════════════════════════════════ -->
-<div class="slide" id="s9">
-  <div class="slide-label">08 — Model Evaluation</div>
-  <h2>Training Results &amp; <span class="gradient-text">Metrics</span></h2>
+    <div class="slide" id="s9">
+      <div class="slide-label">08 — Model Evaluation</div>
+      <h2>Training Results &amp; <span class="gradient-text">Metrics</span></h2>
 
-  <div style="display:grid;grid-template-columns:0.85fr 1fr 0.85fr;gap:20px;margin-top:24px;flex:1;">
+      <div style="display:grid;grid-template-columns:0.85fr 1fr 0.85fr;gap:20px;margin-top:24px;flex:1;">
 
-    <!-- Left: hero metrics + visual comparison -->
-    <div style="display:flex;flex-direction:column;gap:16px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="card card-glow-blue" style="padding:16px;text-align:center;">
-          <div class="stat-num" style="color:var(--blue);font-size:24px;">65%</div>
-          <div class="stat-label">Test Accuracy</div>
-        </div>
-        <div class="card card-glow-teal" style="padding:16px;text-align:center;">
-          <div class="stat-num" style="color:var(--teal);font-size:24px;">0.64</div>
-          <div class="stat-label">Macro F1</div>
-        </div>
-      </div>
+        <!-- Left: hero metrics + visual comparison -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="card card-glow-blue" style="padding:16px;text-align:center;">
+              <div class="stat-num" style="color:var(--blue);font-size:24px;">65%</div>
+              <div class="stat-label">Test Accuracy</div>
+            </div>
+            <div class="card card-glow-teal" style="padding:16px;text-align:center;">
+              <div class="stat-num" style="color:var(--teal);font-size:24px;">0.64</div>
+              <div class="stat-label">Macro F1</div>
+            </div>
+          </div>
 
-      <!-- Visual comparison bars -->
-      <div class="card card-glow-green" style="padding:20px;flex:1;">
-        <h4 style="margin-bottom:16px;color:var(--green);font-size:13px;">Model vs. Random Baseline</h4>
-        <div style="margin-bottom:14px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-size:12px;font-weight:600;">Our Bi-LSTM</span>
-            <span style="font-size:12px;font-weight:700;color:var(--blue);">65%</span>
-          </div>
-          <div style="height:16px;background:rgba(20,30,24,0.06);border-radius:6px;overflow:hidden;">
-            <div style="width:65%;height:100%;background:linear-gradient(90deg,var(--blue),var(--teal));border-radius:6px;"></div>
+          <!-- Visual comparison bars -->
+          <div class="card card-glow-green" style="padding:20px;flex:1;">
+            <h4 style="margin-bottom:16px;color:var(--green);font-size:13px;">Model vs. Random Baseline</h4>
+            <div style="margin-bottom:14px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <span style="font-size:12px;font-weight:600;">Our Bi-LSTM</span>
+                <span style="font-size:12px;font-weight:700;color:var(--blue);">65%</span>
+              </div>
+              <div style="height:16px;background:rgba(20,30,24,0.06);border-radius:6px;overflow:hidden;">
+                <div
+                  style="width:65%;height:100%;background:linear-gradient(90deg,var(--blue),var(--teal));border-radius:6px;">
+                </div>
+              </div>
+            </div>
+            <div style="margin-bottom:16px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <span style="font-size:12px;color:var(--muted);">Random baseline</span>
+                <span style="font-size:12px;color:var(--muted);">33%</span>
+              </div>
+              <div style="height:16px;background:rgba(20,30,24,0.06);border-radius:6px;overflow:hidden;">
+                <div style="width:33%;height:100%;background:rgba(140,150,143,0.4);border-radius:6px;"></div>
+              </div>
+            </div>
+            <div
+              style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(111,174,140,0.08);border:1px solid rgba(111,174,140,0.2);border-radius:10px;">
+              <div style="font-size:22px;font-weight:900;color:var(--green);">1.95×</div>
+              <div style="font-size:12px;color:#3c453e;line-height:1.4;">improvement over chance, across all 3 classes
+              </div>
+            </div>
           </div>
         </div>
-        <div style="margin-bottom:16px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-size:12px;color:var(--muted);">Random baseline</span>
-            <span style="font-size:12px;color:var(--muted);">33%</span>
-          </div>
-          <div style="height:16px;background:rgba(20,30,24,0.06);border-radius:6px;overflow:hidden;">
-            <div style="width:33%;height:100%;background:rgba(140,150,143,0.4);border-radius:6px;"></div>
-          </div>
+
+        <!-- Middle: confusion matrix -->
+        <div class="card" style="padding:18px;display:flex;flex-direction:column;">
+          <h4 style="margin-bottom:10px;font-size:13px;">Confusion Matrix — Test Set</h4>
+          <img src="confusion_matrix_tuned.png" alt="Confusion matrix for the tuned Bi-LSTM model on the test set"
+            style="width:100%;height:auto;border-radius:8px;border:1px solid var(--card-border);" />
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4;">Diagonal = correct predictions.
+            Most confusion is between adjacent classes (Medium↔High, Medium↔Low) — rarely Low↔High.</div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(111,174,140,0.08);border:1px solid rgba(111,174,140,0.2);border-radius:10px;">
-          <div style="font-size:22px;font-weight:900;color:var(--green);">1.95×</div>
-          <div style="font-size:12px;color:#3c453e;line-height:1.4;">improvement over chance, across all 3 classes</div>
+
+        <!-- Right: sample output + justification -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card" style="padding:22px;">
+            <h4 style="margin-bottom:14px;">Sample Prediction Output</h4>
+            <div class="conf-row">
+              <span class="conf-label" style="color:var(--p-high);">High</span>
+              <div class="conf-bar-bg">
+                <div class="conf-bar-fill" style="width:78%;background:var(--p-high);"></div>
+              </div>
+              <span class="conf-pct">78%</span>
+            </div>
+            <div class="conf-row">
+              <span class="conf-label" style="color:var(--p-medium);">Medium</span>
+              <div class="conf-bar-bg">
+                <div class="conf-bar-fill" style="width:17%;background:var(--p-medium);"></div>
+              </div>
+              <span class="conf-pct">17%</span>
+            </div>
+            <div class="conf-row" style="margin-bottom:12px;">
+              <span class="conf-label" style="color:var(--p-low);">Low</span>
+              <div class="conf-bar-bg">
+                <div class="conf-bar-fill" style="width:5%;background:var(--p-low);"></div>
+              </div>
+              <span class="conf-pct">5%</span>
+            </div>
+            <div
+              style="padding:10px 14px;background:rgba(91,105,97,0.07);border:1px solid rgba(91,105,97,0.2);border-radius:8px;display:flex;align-items:center;gap:10px;">
+              <span class="priority p-high" style="font-size:11px;">HIGH</span>
+              <span style="font-size:12px;color:var(--muted);">78% confidence — high-certainty call</span>
+            </div>
+          </div>
+
+          <div class="card card-glow-purple" style="padding:22px;flex:1;">
+            <h4 style="margin-bottom:14px;color:var(--purple);">Why This Is Sufficient</h4>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;gap:12px;align-items:flex-start;">
+                <div
+                  style="width:28px;height:28px;border-radius:8px;background:rgba(31,122,77,0.12);border:1px solid rgba(31,122,77,0.25);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 3 21 3 21 8" />
+                    <line x1="4" y1="20" x2="21" y2="3" />
+                    <polyline points="21 16 21 21 16 21" />
+                    <line x1="15" y1="15" x2="21" y2="21" />
+                    <line x1="4" y1="4" x2="9" y2="9" />
+                  </svg>
+                </div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;margin-bottom:2px;">Inherently ambiguous task</div>
+                  <div style="font-size:12px;color:var(--muted);line-height:1.5;">Human agents themselves often disagree
+                    — 33% random chance is the true floor.</div>
+                </div>
+              </div>
+              <div style="height:1px;background:rgba(20,30,24,0.05);"></div>
+              <div style="display:flex;gap:12px;align-items:flex-start;">
+                <div
+                  style="width:28px;height:28px;border-radius:8px;background:rgba(111,174,140,0.12);border:1px solid rgba(111,174,140,0.25);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                </div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;margin-bottom:2px;">Confidence scores as safety net</div>
+                  <div style="font-size:12px;color:var(--muted);line-height:1.5;">Low-certainty predictions route to
+                    human review — critical tickets are never auto-dismissed.</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Middle: confusion matrix -->
-    <div class="card" style="padding:18px;display:flex;flex-direction:column;">
-      <h4 style="margin-bottom:10px;font-size:13px;">Confusion Matrix — Test Set</h4>
-      <img src="confusion_matrix_tuned.png" alt="Confusion matrix for the tuned Bi-LSTM model on the test set" style="width:100%;height:auto;border-radius:8px;border:1px solid var(--card-border);" />
-      <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4;">Diagonal = correct predictions. Most confusion is between adjacent classes (Medium↔High, Medium↔Low) — rarely Low↔High.</div>
-    </div>
 
-    <!-- Right: sample output + justification -->
-    <div style="display:flex;flex-direction:column;gap:16px;">
-      <div class="card" style="padding:22px;">
-        <h4 style="margin-bottom:14px;">Sample Prediction Output</h4>
-        <div class="conf-row">
-          <span class="conf-label" style="color:var(--p-high);">High</span>
-          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:78%;background:var(--p-high);"></div></div>
-          <span class="conf-pct">78%</span>
-        </div>
-        <div class="conf-row">
-          <span class="conf-label" style="color:var(--p-medium);">Medium</span>
-          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:17%;background:var(--p-medium);"></div></div>
-          <span class="conf-pct">17%</span>
-        </div>
-        <div class="conf-row" style="margin-bottom:12px;">
-          <span class="conf-label" style="color:var(--p-low);">Low</span>
-          <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:5%;background:var(--p-low);"></div></div>
-          <span class="conf-pct">5%</span>
-        </div>
-        <div style="padding:10px 14px;background:rgba(91,105,97,0.07);border:1px solid rgba(91,105,97,0.2);border-radius:8px;display:flex;align-items:center;gap:10px;">
-          <span class="priority p-high" style="font-size:11px;">HIGH</span>
-          <span style="font-size:12px;color:var(--muted);">78% confidence — high-certainty call</span>
-        </div>
-      </div>
-
-      <div class="card card-glow-purple" style="padding:22px;flex:1;">
-        <h4 style="margin-bottom:14px;color:var(--purple);">Why This Is Sufficient</h4>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;gap:12px;align-items:flex-start;">
-            <div style="width:28px;height:28px;border-radius:8px;background:rgba(31,122,77,0.12);border:1px solid rgba(31,122,77,0.25);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></div>
-            <div><div style="font-size:13px;font-weight:600;margin-bottom:2px;">Inherently ambiguous task</div><div style="font-size:12px;color:var(--muted);line-height:1.5;">Human agents themselves often disagree — 33% random chance is the true floor.</div></div>
-          </div>
-          <div style="height:1px;background:rgba(20,30,24,0.05);"></div>
-          <div style="display:flex;gap:12px;align-items:flex-start;">
-            <div style="width:28px;height:28px;border-radius:8px;background:rgba(111,174,140,0.12);border:1px solid rgba(111,174,140,0.25);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-            <div><div style="font-size:13px;font-weight:600;margin-bottom:2px;">Confidence scores as safety net</div><div style="font-size:12px;color:var(--muted);line-height:1.5;">Low-certainty predictions route to human review — critical tickets are never auto-dismissed.</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════
      SLIDE 10 — Overfitting Prevention
 ═══════════════════════════════════════════════════════ -->
-<div class="slide" id="s10">
-  <div class="slide-label">09 — Regularisation</div>
-  <h2>Overfitting <span class="gradient-text">Prevention Strategy</span></h2>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:28px;flex:1;align-content:start;">
+    <div class="slide" id="s10">
+      <div class="slide-label">09 — Regularisation</div>
+      <h2>Overfitting <span class="gradient-text">Prevention Strategy</span></h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:28px;flex:1;align-content:start;">
 
-    <div class="card card-glow-orange" style="padding:24px;display:flex;flex-direction:column;gap:12px;">
-      <div style="color:var(--orange);margin-bottom:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></div>
-      <h3 style="color:var(--orange);">Dropout (30%)</h3>
-      <p style="font-size:14px;color:#3c453e;line-height:1.6;">Applied after the Bi-LSTM layer. During training, 30% of units are randomly zeroed per batch, forcing the network to learn redundant representations rather than memorising training examples.</p>
-      <div style="margin-top:auto;padding:10px 14px;background:rgba(91,105,97,0.08);border-radius:8px;font-size:13px;color:var(--orange);border:1px solid rgba(91,105,97,0.2);">
-        Dropout rate chosen via Keras-Tuner search
+        <div class="card card-glow-teal" style="padding:24px;display:flex;flex-direction:column;gap:12px;">
+          <div style="color:var(--teal);margin-bottom:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="3" x2="12" y2="21" />
+              <path d="M5 21h14" />
+              <path d="M5 12H2l3-9 3 9" />
+              <path d="M19 12h3l-3-9-3 9" />
+            </svg></div>
+          <h3 style="color:var(--teal);">Stratified Split</h3>
+          <p style="font-size:14px;color:#3c453e;line-height:1.6;">Train/Val/Test sets are split with stratification on
+            the priority label, ensuring each split has the same class distribution. This prevents accidentally
+            validating on an easy subset and gives honest generalisation estimates.</p>
+          <div
+            style="margin-top:auto;padding:10px 14px;background:rgba(47,158,100,0.08);border-radius:8px;font-size:13px;color:var(--teal);border:1px solid rgba(47,158,100,0.2);">
+            70 / 15 / 15 % · stratified · seed 42
+          </div>
+        </div>
+
+        <div class="card card-glow-orange" style="padding:24px;display:flex;flex-direction:column;gap:12px;">
+          <div style="color:var(--orange);margin-bottom:4px;"><svg width="22" height="22" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 3 21 3 21 8" />
+              <line x1="4" y1="20" x2="21" y2="3" />
+              <polyline points="21 16 21 21 16 21" />
+              <line x1="15" y1="15" x2="21" y2="21" />
+              <line x1="4" y1="4" x2="9" y2="9" />
+            </svg></div>
+          <h3 style="color:var(--orange);">Dropout (30%)</h3>
+          <p style="font-size:14px;color:#3c453e;line-height:1.6;">Applied after the Bi-LSTM layer. During training, 30%
+            of units are randomly zeroed per batch, forcing the network to learn redundant representations rather than
+            memorising training examples.</p>
+          <div
+            style="margin-top:auto;padding:10px 14px;background:rgba(91,105,97,0.08);border-radius:8px;font-size:13px;color:var(--orange);border:1px solid rgba(91,105,97,0.2);">
+            Dropout rate chosen via Keras-Tuner search
+          </div>
+        </div>
+
+        <div class="card card-glow-blue" style="padding:24px;display:flex;flex-direction:column;gap:12px;">
+          <div style="color:var(--blue);margin-bottom:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="4" width="4" height="16" />
+              <rect x="14" y="4" width="4" height="16" />
+            </svg></div>
+          <h3 style="color:var(--blue);">Early Stopping</h3>
+          <p style="font-size:14px;color:#3c453e;line-height:1.6;">Training monitors validation loss after each epoch.
+            If it fails to improve for a set patience window, training stops automatically — preventing the model from
+            continuing to memorise training data after generalisation peaks.</p>
+          <div
+            style="margin-top:auto;padding:10px 14px;background:rgba(31,122,77,0.08);border-radius:8px;font-size:13px;color:var(--blue);border:1px solid rgba(31,122,77,0.2);">
+            Monitors val_loss · restores best weights
+          </div>
+        </div>
+
+        <div class="card" style="padding:22px;grid-column:span 3;display:flex;gap:24px;align-items:center;">
+          <div style="flex:1;">
+            <h4 style="margin-bottom:10px;">Additional Measures</h4>
+            <ul class="bullet-list">
+              <li>No data leakage: deduplication runs <em>before</em> the split, preventing duplicate training samples
+                from bleeding into test.</li>
+              <li>Classes are imbalanced (Low 21% / Medium 41% / High 39%), so balanced class weights are computed and
+                passed to training — avoiding bias toward the majority classes.</li>
+              <li>Keras-Tuner automated hyperparameter search avoids manual over-tuning on the validation set.</li>
+            </ul>
+          </div>
+          <div style="width:1px;height:80px;background:var(--card-border);"></div>
+          <div style="flex:0 0 200px;text-align:center;">
+            <div
+              style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">
+              Random Baseline</div>
+            <div style="font-size:38px;font-weight:800;color:var(--muted);">33%</div>
+            <div style="font-size:11px;color:var(--muted);">vs. our model</div>
+            <div style="font-size:38px;font-weight:800;color:var(--blue);">65%</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="card card-glow-blue" style="padding:24px;display:flex;flex-direction:column;gap:12px;">
-      <div style="color:var(--blue);margin-bottom:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>
-      <h3 style="color:var(--blue);">Early Stopping</h3>
-      <p style="font-size:14px;color:#3c453e;line-height:1.6;">Training monitors validation loss after each epoch. If it fails to improve for a set patience window, training stops automatically — preventing the model from continuing to memorise training data after generalisation peaks.</p>
-      <div style="margin-top:auto;padding:10px 14px;background:rgba(31,122,77,0.08);border-radius:8px;font-size:13px;color:var(--blue);border:1px solid rgba(31,122,77,0.2);">
-        Monitors val_loss · restores best weights
-      </div>
-    </div>
 
-    <div class="card card-glow-teal" style="padding:24px;display:flex;flex-direction:column;gap:12px;">
-      <div style="color:var(--teal);margin-bottom:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><path d="M5 21h14"/><path d="M5 12H2l3-9 3 9"/><path d="M19 12h3l-3-9-3 9"/></svg></div>
-      <h3 style="color:var(--teal);">Stratified Split</h3>
-      <p style="font-size:14px;color:#3c453e;line-height:1.6;">Train/Val/Test sets are split with stratification on the priority label, ensuring each split has the same class distribution. This prevents accidentally validating on an easy subset and gives honest generalisation estimates.</p>
-      <div style="margin-top:auto;padding:10px 14px;background:rgba(47,158,100,0.08);border-radius:8px;font-size:13px;color:var(--teal);border:1px solid rgba(47,158,100,0.2);">
-        70 / 15 / 15 % · stratified · seed 42
-      </div>
-    </div>
-
-    <div class="card" style="padding:22px;grid-column:span 3;display:flex;gap:24px;align-items:center;">
-      <div style="flex:1;">
-        <h4 style="margin-bottom:10px;">Additional Measures</h4>
-        <ul class="bullet-list">
-          <li>No data leakage: deduplication runs <em>before</em> the split, preventing duplicate training samples from bleeding into test.</li>
-          <li>Classes are imbalanced (Low 21% / Medium 41% / High 39%), so balanced class weights are computed and passed to training — avoiding bias toward the majority classes.</li>
-          <li>Keras-Tuner automated hyperparameter search avoids manual over-tuning on the validation set.</li>
-        </ul>
-      </div>
-      <div style="width:1px;height:80px;background:var(--card-border);"></div>
-      <div style="flex:0 0 200px;text-align:center;">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Random Baseline</div>
-        <div style="font-size:38px;font-weight:800;color:var(--muted);">33%</div>
-        <div style="font-size:11px;color:var(--muted);">vs. our model</div>
-        <div style="font-size:38px;font-weight:800;color:var(--blue);">65%</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════
      SLIDE 11 — MVP Integration
 ═══════════════════════════════════════════════════════ -->
-<div class="slide" id="s11">
-  <div class="slide-label">10 — MVP Integration</div>
-  <h2>End-to-End <span class="gradient-text">System Architecture</span></h2>
-  <div style="margin-top:24px;flex:1;display:flex;flex-direction:column;gap:20px;">
+    <div class="slide" id="s11">
+      <div class="slide-label">10 — MVP Integration</div>
+      <h2>End-to-End <span class="gradient-text">System Architecture</span></h2>
+      <div style="margin-top:24px;flex:1;display:flex;flex-direction:column;gap:20px;">
 
-    <!-- E2E flow -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:20px;background:var(--card);border:1px solid var(--card-border);border-radius:16px;">
-      <div style="text-align:center;padding:14px 20px;background:rgba(31,122,77,0.1);border:1px solid rgba(31,122,77,0.25);border-radius:12px;min-width:130px;">
-        <div style="color:var(--blue);margin-bottom:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-        <div style="font-size:13px;font-weight:700;color:var(--blue);">Support Agent</div>
-        <div style="font-size:11px;color:var(--muted);">Enters Subject + Body</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;color:var(--muted);font-size:18px;gap:3px;">
-        <span>→</span>
-        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">enters ticket</span>
-      </div>
-      <div style="text-align:center;padding:14px 20px;background:rgba(47,158,100,0.1);border:1px solid rgba(47,158,100,0.25);border-radius:12px;min-width:130px;">
-        <div style="color:var(--teal);margin-bottom:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-        <div style="font-size:13px;font-weight:700;color:var(--teal);">Streamlit UI</div>
-        <div style="font-size:11px;color:var(--muted);">Email-style interface</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;color:var(--muted);font-size:18px;gap:3px;">
-        <span>→</span>
-        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">POST /predict</span>
-      </div>
-      <div style="text-align:center;padding:14px 20px;background:rgba(91,105,97,0.1);border:1px solid rgba(91,105,97,0.25);border-radius:12px;min-width:130px;">
-        <div style="color:var(--orange);margin-bottom:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-        <div style="font-size:13px;font-weight:700;color:var(--orange);">FastAPI</div>
-        <div style="font-size:11px;color:var(--muted);">REST backend</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;color:var(--muted);font-size:18px;gap:3px;">
-        <span>→</span>
-        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">predict()</span>
-      </div>
-      <div style="text-align:center;padding:14px 20px;background:rgba(140,150,143,0.1);border:1px solid rgba(140,150,143,0.25);border-radius:12px;min-width:130px;">
-        <div style="color:var(--purple);margin-bottom:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="15" x2="23" y2="15"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="15" x2="4" y2="15"/></svg></div>
-        <div style="font-size:13px;font-weight:700;color:var(--purple);">Bi-LSTM Model</div>
-        <div style="font-size:11px;color:var(--muted);">.keras + tokenizer</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;color:var(--muted);font-size:18px;gap:3px;">
-        <span>→</span>
-        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">probabilities</span>
-      </div>
-      <div style="text-align:center;padding:14px 20px;background:rgba(111,174,140,0.1);border:1px solid rgba(111,174,140,0.25);border-radius:12px;min-width:130px;">
-        <div style="color:var(--green);margin-bottom:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-        <div style="font-size:13px;font-weight:700;color:var(--green);">Result</div>
-        <div style="font-size:11px;color:var(--muted);">FastAPI builds JSON</div>
+        <!-- E2E flow -->
+        <div
+          style="display:flex;align-items:center;justify-content:center;gap:12px;padding:20px;background:var(--card);border:1px solid var(--card-border);border-radius:16px;">
+          <div
+            style="text-align:center;padding:14px 20px;background:rgba(31,122,77,0.1);border:1px solid rgba(31,122,77,0.25);border-radius:12px;min-width:130px;">
+            <div style="color:var(--blue);margin-bottom:6px;"><svg width="20" height="20" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg></div>
+            <div style="font-size:13px;font-weight:700;color:var(--blue);">Support Agent</div>
+            <div style="font-size:11px;color:var(--muted);">Enters Subject + Body</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;color:var(--muted);font-size:18px;gap:3px;">
+            <span>→</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">enters ticket</span>
+          </div>
+          <div
+            style="text-align:center;padding:14px 20px;background:rgba(47,158,100,0.1);border:1px solid rgba(47,158,100,0.25);border-radius:12px;min-width:130px;">
+            <div style="color:var(--teal);margin-bottom:6px;"><svg width="20" height="20" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg></div>
+            <div style="font-size:13px;font-weight:700;color:var(--teal);">Streamlit UI</div>
+            <div style="font-size:11px;color:var(--muted);">Email-style interface</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;color:var(--muted);font-size:18px;gap:3px;">
+            <span>→</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">POST /predict</span>
+          </div>
+          <div
+            style="text-align:center;padding:14px 20px;background:rgba(91,105,97,0.1);border:1px solid rgba(91,105,97,0.25);border-radius:12px;min-width:130px;">
+            <div style="color:var(--orange);margin-bottom:6px;"><svg width="20" height="20" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg></div>
+            <div style="font-size:13px;font-weight:700;color:var(--orange);">FastAPI</div>
+            <div style="font-size:11px;color:var(--muted);">REST backend</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;color:var(--muted);font-size:18px;gap:3px;">
+            <span>→</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">predict()</span>
+          </div>
+          <div
+            style="text-align:center;padding:14px 20px;background:rgba(140,150,143,0.1);border:1px solid rgba(140,150,143,0.25);border-radius:12px;min-width:130px;">
+            <div style="color:var(--purple);margin-bottom:6px;"><svg width="20" height="20" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+                <rect x="9" y="9" width="6" height="6" />
+                <line x1="9" y1="1" x2="9" y2="4" />
+                <line x1="15" y1="1" x2="15" y2="4" />
+                <line x1="9" y1="20" x2="9" y2="23" />
+                <line x1="15" y1="20" x2="15" y2="23" />
+                <line x1="20" y1="9" x2="23" y2="9" />
+                <line x1="20" y1="15" x2="23" y2="15" />
+                <line x1="1" y1="9" x2="4" y2="9" />
+                <line x1="1" y1="15" x2="4" y2="15" />
+              </svg></div>
+            <div style="font-size:13px;font-weight:700;color:var(--purple);">Bi-LSTM Model</div>
+            <div style="font-size:11px;color:var(--muted);">.keras + tokenizer</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;color:var(--muted);font-size:18px;gap:3px;">
+            <span>→</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">probabilities</span>
+          </div>
+          <div
+            style="text-align:center;padding:14px 20px;background:rgba(111,174,140,0.1);border:1px solid rgba(111,174,140,0.25);border-radius:12px;min-width:130px;">
+            <div style="color:var(--green);margin-bottom:6px;"><svg width="20" height="20" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg></div>
+            <div style="font-size:13px;font-weight:700;color:var(--green);">Result</div>
+            <div style="font-size:11px;color:var(--muted);">FastAPI builds JSON</div>
+          </div>
+        </div>
+        <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:-8px;">↩ The JSON response then flows
+          back through FastAPI → Streamlit UI, displaying the result to the agent in under a second.</div>
+
+        <div class="grid-3" style="gap:16px;">
+          <div class="card card-glow-blue" style="padding:20px;">
+            <h4 style="margin-bottom:10px;color:var(--blue);">Frontend (Streamlit)</h4>
+            <ul class="bullet-list" style="font-size:13px;">
+              <li>Email-style form: Subject + Body fields</li>
+              <li>Real-time prediction on button click</li>
+              <li>Confidence breakdown by class</li>
+              <li>Session history of all classifications</li>
+              <li>Non-technical, agent-friendly interface</li>
+            </ul>
+          </div>
+          <div class="card card-glow-orange" style="padding:20px;">
+            <h4 style="margin-bottom:10px;color:var(--orange);">Backend (FastAPI)</h4>
+            <ul class="bullet-list" style="font-size:13px;">
+              <li><code style="font-family:'JetBrains Mono',monospace;font-size:12px;">POST /predict</code> endpoint
+              </li>
+              <li>Loads model + tokenizer on startup</li>
+              <li>Applies same preprocessing as training</li>
+              <li>Returns priority, confidence dict, department</li>
+              <li>Sub-second latency end-to-end</li>
+            </ul>
+          </div>
+          <div class="card card-glow-teal" style="padding:20px;">
+            <h4 style="margin-bottom:10px;color:var(--teal);">Integration Contract</h4>
+            <ul class="bullet-list" style="font-size:13px;">
+              <li>API contract fixed on Day 1 — parallel dev</li>
+              <li>Frontend sends <code
+                  style="font-family:'JetBrains Mono',monospace;font-size:12px;">subject + body</code></li>
+              <li>Backend returns typed JSON response</li>
+              <li>Department resolved by ticket type lookup</li>
+              <li>Decoupled: model swap without UI changes</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
-    <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:-8px;">↩ The JSON response then flows back through FastAPI → Streamlit UI, displaying the result to the agent in under a second.</div>
-
-    <div class="grid-3" style="gap:16px;">
-      <div class="card card-glow-blue" style="padding:20px;">
-        <h4 style="margin-bottom:10px;color:var(--blue);">Frontend (Streamlit)</h4>
-        <ul class="bullet-list" style="font-size:13px;">
-          <li>Email-style form: Subject + Body fields</li>
-          <li>Real-time prediction on button click</li>
-          <li>Confidence breakdown by class</li>
-          <li>Session history of all classifications</li>
-          <li>Non-technical, agent-friendly interface</li>
-        </ul>
-      </div>
-      <div class="card card-glow-orange" style="padding:20px;">
-        <h4 style="margin-bottom:10px;color:var(--orange);">Backend (FastAPI)</h4>
-        <ul class="bullet-list" style="font-size:13px;">
-          <li><code style="font-family:'JetBrains Mono',monospace;font-size:12px;">POST /predict</code> endpoint</li>
-          <li>Loads model + tokenizer on startup</li>
-          <li>Applies same preprocessing as training</li>
-          <li>Returns priority, confidence dict, department</li>
-          <li>Sub-second latency end-to-end</li>
-        </ul>
-      </div>
-      <div class="card card-glow-teal" style="padding:20px;">
-        <h4 style="margin-bottom:10px;color:var(--teal);">Integration Contract</h4>
-        <ul class="bullet-list" style="font-size:13px;">
-          <li>API contract fixed on Day 1 — parallel dev</li>
-          <li>Frontend sends <code style="font-family:'JetBrains Mono',monospace;font-size:12px;">subject + body</code></li>
-          <li>Backend returns typed JSON response</li>
-          <li>Department resolved by ticket type lookup</li>
-          <li>Decoupled: model swap without UI changes</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
 
 
-<!-- ═══════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════
      SLIDE 12 — Live Demo
 ═══════════════════════════════════════════════════════ -->
-<div class="slide" id="s12">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:32px;">
-    <div>
-      <div class="slide-label" style="text-align:center;margin-bottom:16px;">11 — Live Demo</div>
-      <h1 style="font-size:64px;">Let's See It<br/><span class="gradient-text">In Action</span></h1>
-      <p style="font-size:20px;color:var(--muted);margin-top:16px;font-weight:300;">Real-time support ticket classification — &lt;1 second</p>
+    <div class="slide" id="s12">
+      <div
+        style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:32px;">
+        <div>
+          <div class="slide-label" style="text-align:center;margin-bottom:16px;">11 — Live Demo</div>
+          <h1 style="font-size:64px;">Let's See It<br /><span class="gradient-text">In Action</span></h1>
+          <p style="font-size:20px;color:var(--muted);margin-top:16px;font-weight:300;">Real-time support ticket
+            classification — &lt;1 second</p>
+        </div>
+
+        <div style="display:flex;gap:20px;justify-content:center;">
+          <div class="step-box" style="width:160px;border-color:rgba(31,122,77,0.3);">
+            <div class="step-num">1</div>
+            <div class="step-label">Enter Ticket</div>
+            <div class="step-desc">Paste Subject + Body of a real customer email</div>
+          </div>
+          <div style="display:flex;align-items:center;color:var(--muted);font-size:20px;">→</div>
+          <div class="step-box" style="width:160px;border-color:rgba(47,158,100,0.3);">
+            <div class="step-num" style="border-color:var(--teal);color:var(--teal);">2</div>
+            <div class="step-label">Click Classify</div>
+            <div class="step-desc">FastAPI backend processes the text in real-time</div>
+          </div>
+          <div style="display:flex;align-items:center;color:var(--muted);font-size:20px;">→</div>
+          <div class="step-box" style="width:160px;border-color:rgba(140,150,143,0.3);">
+            <div class="step-num" style="border-color:var(--purple);color:var(--purple);">3</div>
+            <div class="step-label">See Results</div>
+            <div class="step-desc">Priority level + confidence breakdown + department</div>
+          </div>
+          <div style="display:flex;align-items:center;color:var(--muted);font-size:20px;">→</div>
+          <div class="step-box" style="width:160px;border-color:rgba(111,174,140,0.3);">
+            <div class="step-num" style="border-color:var(--green);color:var(--green);">4</div>
+            <div class="step-label">Track History</div>
+            <div class="step-desc">Session log of all classified tickets</div>
+          </div>
+        </div>
+
+        <!-- Simulated output card -->
+        <div class="card" style="max-width:520px;width:100%;padding:24px;text-align:left;">
+          <div
+            style="font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;">
+            Example Output</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <span class="priority p-high" style="font-size:16px;padding:8px 20px;">HIGH</span>
+            <span style="font-size:13px;color:var(--muted);">→ Technical Support</span>
+          </div>
+          <div class="conf-row">
+            <span class="conf-label" style="color:var(--p-high);">High</span>
+            <div class="conf-bar-bg">
+              <div class="conf-bar-fill" style="width:78%;background:var(--p-high);"></div>
+            </div>
+            <span class="conf-pct">78%</span>
+          </div>
+          <div class="conf-row">
+            <span class="conf-label" style="color:var(--p-medium);">Medium</span>
+            <div class="conf-bar-bg">
+              <div class="conf-bar-fill" style="width:17%;background:var(--p-medium);"></div>
+            </div>
+            <span class="conf-pct">17%</span>
+          </div>
+          <div class="conf-row">
+            <span class="conf-label" style="color:var(--p-low);">Low</span>
+            <div class="conf-bar-bg">
+              <div class="conf-bar-fill" style="width:5%;background:var(--p-low);"></div>
+            </div>
+            <span class="conf-pct">5%</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div style="display:flex;gap:20px;justify-content:center;">
-      <div class="step-box" style="width:160px;border-color:rgba(31,122,77,0.3);">
-        <div class="step-num">1</div>
-        <div class="step-label">Enter Ticket</div>
-        <div class="step-desc">Paste Subject + Body of a real customer email</div>
-      </div>
-      <div style="display:flex;align-items:center;color:var(--muted);font-size:20px;">→</div>
-      <div class="step-box" style="width:160px;border-color:rgba(47,158,100,0.3);">
-        <div class="step-num" style="border-color:var(--teal);color:var(--teal);">2</div>
-        <div class="step-label">Click Classify</div>
-        <div class="step-desc">FastAPI backend processes the text in real-time</div>
-      </div>
-      <div style="display:flex;align-items:center;color:var(--muted);font-size:20px;">→</div>
-      <div class="step-box" style="width:160px;border-color:rgba(140,150,143,0.3);">
-        <div class="step-num" style="border-color:var(--purple);color:var(--purple);">3</div>
-        <div class="step-label">See Results</div>
-        <div class="step-desc">Priority level + confidence breakdown + department</div>
-      </div>
-      <div style="display:flex;align-items:center;color:var(--muted);font-size:20px;">→</div>
-      <div class="step-box" style="width:160px;border-color:rgba(111,174,140,0.3);">
-        <div class="step-num" style="border-color:var(--green);color:var(--green);">4</div>
-        <div class="step-label">Track History</div>
-        <div class="step-desc">Session log of all classified tickets</div>
-      </div>
-    </div>
 
-    <!-- Simulated output card -->
-    <div class="card" style="max-width:520px;width:100%;padding:24px;text-align:left;">
-      <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;">Example Output</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <span class="priority p-high" style="font-size:16px;padding:8px 20px;">HIGH</span>
-        <span style="font-size:13px;color:var(--muted);">→ Technical Support</span>
-      </div>
-      <div class="conf-row">
-        <span class="conf-label" style="color:var(--p-high);">High</span>
-        <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:78%;background:var(--p-high);"></div></div>
-        <span class="conf-pct">78%</span>
-      </div>
-      <div class="conf-row">
-        <span class="conf-label" style="color:var(--p-medium);">Medium</span>
-        <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:17%;background:var(--p-medium);"></div></div>
-        <span class="conf-pct">17%</span>
-      </div>
-      <div class="conf-row">
-        <span class="conf-label" style="color:var(--p-low);">Low</span>
-        <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:5%;background:var(--p-low);"></div></div>
-        <span class="conf-pct">5%</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════
      SLIDE 13 — Closing
 ═══════════════════════════════════════════════════════ -->
-<div class="slide" id="s13">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px;">
-    <div class="ie-badge" style="justify-content:center;">
-      <div class="ie-dot"></div>
-      IE University &middot; Deep Learning &middot; 2026
+    <div class="slide" id="s13">
+      <div
+        style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px;">
+        <div class="ie-badge" style="justify-content:center;">
+          <div class="ie-dot"></div>
+          IE University &middot; Deep Learning &middot; 2026
+        </div>
+        <h1 style="font-size:76px;">Thank <span class="gradient-text">you!</span></h1>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
+          <span class="tag tag-teal">Andrea Alarcón</span>
+          <span class="tag tag-purple">Dalton Kern</span>
+          <span class="tag tag-blue">Juan José Rincón</span>
+        </div>
+      </div>
+
+      <div
+        style="position:absolute;right:80px;top:50%;transform:translateY(-50%);width:340px;height:340px;background:radial-gradient(circle,rgba(31,122,77,0.12) 0%,transparent 70%);border-radius:50%;pointer-events:none;">
+      </div>
+      <div
+        style="position:absolute;left:80px;top:50%;transform:translateY(-50%);width:260px;height:260px;background:radial-gradient(circle,rgba(47,158,100,0.1) 0%,transparent 70%);border-radius:50%;pointer-events:none;">
+      </div>
     </div>
-    <h1 style="font-size:76px;">Thank <span class="gradient-text">you!</span></h1>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
-      <span class="tag tag-teal">Andrea Alarcón</span>
-      <span class="tag tag-purple">Dalton Kern</span>
-      <span class="tag tag-blue">Juan José Rincón</span>
-    </div>
-  </div>
 
-  <div style="position:absolute;right:80px;top:50%;transform:translateY(-50%);width:340px;height:340px;background:radial-gradient(circle,rgba(31,122,77,0.12) 0%,transparent 70%);border-radius:50%;pointer-events:none;"></div>
-  <div style="position:absolute;left:80px;top:50%;transform:translateY(-50%);width:260px;height:260px;background:radial-gradient(circle,rgba(47,158,100,0.1) 0%,transparent 70%);border-radius:50%;pointer-events:none;"></div>
-</div>
+  </div><!-- end #deck -->
 
-</div><!-- end #deck -->
+  <script>
+    const TOTAL = 13;
+    let current = 1;
 
-<script>
-  const TOTAL = 13;
-  let current = 1;
+    function goTo(n) {
+      if (n < 1 || n > TOTAL) return;
+      const prev = document.querySelector('.slide.active');
+      const next = document.getElementById('s' + n);
+      if (!next || prev === next) return;
 
-  function goTo(n) {
-    if (n < 1 || n > TOTAL) return;
-    const prev = document.querySelector('.slide.active');
-    const next = document.getElementById('s' + n);
-    if (!next || prev === next) return;
+      prev.classList.add('exit');
+      prev.classList.remove('active');
 
-    prev.classList.add('exit');
-    prev.classList.remove('active');
-
-    // brief delay so exit animation starts before re-render
-    requestAnimationFrame(() => {
+      // brief delay so exit animation starts before re-render
       requestAnimationFrame(() => {
-        prev.classList.remove('exit');
-        next.classList.add('active');
-        current = n;
-        document.getElementById('counter').textContent = current + ' / ' + TOTAL;
-        document.getElementById('progress').style.width = (current / TOTAL * 100) + '%';
+        requestAnimationFrame(() => {
+          prev.classList.remove('exit');
+          next.classList.add('active');
+          current = n;
+          document.getElementById('counter').textContent = current + ' / ' + TOTAL;
+          document.getElementById('progress').style.width = (current / TOTAL * 100) + '%';
+        });
       });
+    }
+
+    document.getElementById('btn-prev').addEventListener('click', () => goTo(current - 1));
+    document.getElementById('btn-next').addEventListener('click', () => goTo(current + 1));
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(current - 1); }
+      if (e.key === 'Home') goTo(1);
+      if (e.key === 'End') goTo(TOTAL);
     });
-  }
 
-  document.getElementById('btn-prev').addEventListener('click', () => goTo(current - 1));
-  document.getElementById('btn-next').addEventListener('click', () => goTo(current + 1));
+    // touch / swipe support
+    let touchX = null;
+    document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+    document.addEventListener('touchend', e => {
+      if (touchX === null) return;
+      const dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 50) dx < 0 ? goTo(current + 1) : goTo(current - 1);
+      touchX = null;
+    });
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
-    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                    { e.preventDefault(); goTo(current - 1); }
-    if (e.key === 'Home') goTo(1);
-    if (e.key === 'End')  goTo(TOTAL);
-  });
-
-  // touch / swipe support
-  let touchX = null;
-  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
-  document.addEventListener('touchend', e => {
-    if (touchX === null) return;
-    const dx = e.changedTouches[0].clientX - touchX;
-    if (Math.abs(dx) > 50) dx < 0 ? goTo(current + 1) : goTo(current - 1);
-    touchX = null;
-  });
-
-  // init progress bar
-  document.getElementById('progress').style.width = (1 / TOTAL * 100) + '%';
-</script>
+    // init progress bar
+    document.getElementById('progress').style.width = (1 / TOTAL * 100) + '%';
+  </script>
 </body>
+
 </html>
