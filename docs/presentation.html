@@ -1053,7 +1053,7 @@
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;color:var(--muted);font-size:18px;gap:3px;">
         <span>→</span>
-        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">HTTP POST</span>
+        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">enters ticket</span>
       </div>
       <div style="text-align:center;padding:14px 20px;background:rgba(47,158,100,0.1);border:1px solid rgba(47,158,100,0.25);border-radius:12px;min-width:130px;">
         <div style="color:var(--teal);margin-bottom:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
@@ -1062,7 +1062,7 @@
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;color:var(--muted);font-size:18px;gap:3px;">
         <span>→</span>
-        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">/predict</span>
+        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">POST /predict</span>
       </div>
       <div style="text-align:center;padding:14px 20px;background:rgba(91,105,97,0.1);border:1px solid rgba(91,105,97,0.25);border-radius:12px;min-width:130px;">
         <div style="color:var(--orange);margin-bottom:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
@@ -1080,14 +1080,15 @@
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;color:var(--muted);font-size:18px;gap:3px;">
         <span>→</span>
-        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">JSON</span>
+        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;">probabilities</span>
       </div>
       <div style="text-align:center;padding:14px 20px;background:rgba(111,174,140,0.1);border:1px solid rgba(111,174,140,0.25);border-radius:12px;min-width:130px;">
         <div style="color:var(--green);margin-bottom:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
         <div style="font-size:13px;font-weight:700;color:var(--green);">Result</div>
-        <div style="font-size:11px;color:var(--muted);">Priority + dept</div>
+        <div style="font-size:11px;color:var(--muted);">FastAPI builds JSON</div>
       </div>
     </div>
+    <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:-8px;">↩ The JSON response then flows back through FastAPI → Streamlit UI, displaying the result to the agent in under a second.</div>
 
     <div class="grid-3" style="gap:16px;">
       <div class="card card-glow-blue" style="padding:20px;">
