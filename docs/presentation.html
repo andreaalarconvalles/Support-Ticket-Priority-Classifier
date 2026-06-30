@@ -709,13 +709,6 @@
         </div>
         <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(91,105,97,0.12);color:var(--orange);border:1px solid rgba(91,105,97,0.25);">⚠ Partial</span>
       </div>
-      <div style="padding:14px 16px;background:rgba(20,30,24,0.03);border:1px solid var(--card-border);border-radius:12px;display:flex;align-items:center;justify-content:space-between;">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:#3c453e;">Transformer / BERT</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Not in scope per brief</div>
-        </div>
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(22,38,28,0.12);color:var(--red);border:1px solid rgba(22,38,28,0.25);">✗ Out of scope</span>
-      </div>
       <div style="padding:16px;background:rgba(31,122,77,0.08);border:1px solid rgba(31,122,77,0.35);border-radius:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 0 20px rgba(31,122,77,0.1);">
         <div>
           <div style="font-size:14px;font-weight:700;color:var(--text);">Bidirectional LSTM</div>
@@ -893,47 +886,54 @@
   <div class="slide-label">08 — Model Evaluation</div>
   <h2>Training Results &amp; <span class="gradient-text">Metrics</span></h2>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;flex:1;">
+  <div style="display:grid;grid-template-columns:0.85fr 1fr 0.85fr;gap:20px;margin-top:24px;flex:1;">
 
     <!-- Left: hero metrics + visual comparison -->
     <div style="display:flex;flex-direction:column;gap:16px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="card card-glow-blue" style="padding:20px;text-align:center;">
-          <div class="stat-num" style="color:var(--blue);">65%</div>
+        <div class="card card-glow-blue" style="padding:16px;text-align:center;">
+          <div class="stat-num" style="color:var(--blue);font-size:24px;">65%</div>
           <div class="stat-label">Test Accuracy</div>
         </div>
-        <div class="card card-glow-teal" style="padding:20px;text-align:center;">
-          <div class="stat-num" style="color:var(--teal);">0.64</div>
+        <div class="card card-glow-teal" style="padding:16px;text-align:center;">
+          <div class="stat-num" style="color:var(--teal);font-size:24px;">0.64</div>
           <div class="stat-label">Macro F1</div>
         </div>
       </div>
 
       <!-- Visual comparison bars -->
-      <div class="card card-glow-green" style="padding:22px;flex:1;">
-        <h4 style="margin-bottom:18px;color:var(--green);">Model vs. Random Baseline</h4>
-        <div style="margin-bottom:16px;">
+      <div class="card card-glow-green" style="padding:20px;flex:1;">
+        <h4 style="margin-bottom:16px;color:var(--green);font-size:13px;">Model vs. Random Baseline</h4>
+        <div style="margin-bottom:14px;">
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">Our Bi-LSTM</span>
-            <span style="font-size:13px;font-weight:700;color:var(--blue);">65%</span>
+            <span style="font-size:12px;font-weight:600;">Our Bi-LSTM</span>
+            <span style="font-size:12px;font-weight:700;color:var(--blue);">65%</span>
           </div>
-          <div style="height:20px;background:rgba(20,30,24,0.06);border-radius:6px;overflow:hidden;">
+          <div style="height:16px;background:rgba(20,30,24,0.06);border-radius:6px;overflow:hidden;">
             <div style="width:65%;height:100%;background:linear-gradient(90deg,var(--blue),var(--teal));border-radius:6px;"></div>
           </div>
         </div>
-        <div style="margin-bottom:20px;">
+        <div style="margin-bottom:16px;">
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-size:13px;color:var(--muted);">Random baseline</span>
-            <span style="font-size:13px;color:var(--muted);">33%</span>
+            <span style="font-size:12px;color:var(--muted);">Random baseline</span>
+            <span style="font-size:12px;color:var(--muted);">33%</span>
           </div>
-          <div style="height:20px;background:rgba(20,30,24,0.06);border-radius:6px;overflow:hidden;">
+          <div style="height:16px;background:rgba(20,30,24,0.06);border-radius:6px;overflow:hidden;">
             <div style="width:33%;height:100%;background:rgba(140,150,143,0.4);border-radius:6px;"></div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(111,174,140,0.08);border:1px solid rgba(111,174,140,0.2);border-radius:10px;">
-          <div style="font-size:28px;font-weight:900;color:var(--green);">1.95×</div>
-          <div style="font-size:13px;color:#3c453e;line-height:1.5;">improvement over chance — meaningful signal across all 3 priority classes</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(111,174,140,0.08);border:1px solid rgba(111,174,140,0.2);border-radius:10px;">
+          <div style="font-size:22px;font-weight:900;color:var(--green);">1.95×</div>
+          <div style="font-size:12px;color:#3c453e;line-height:1.4;">improvement over chance, across all 3 classes</div>
         </div>
       </div>
+    </div>
+
+    <!-- Middle: confusion matrix -->
+    <div class="card" style="padding:18px;display:flex;flex-direction:column;">
+      <h4 style="margin-bottom:10px;font-size:13px;">Confusion Matrix — Test Set</h4>
+      <img src="confusion_matrix_tuned.png" alt="Confusion matrix for the tuned Bi-LSTM model on the test set" style="width:100%;height:auto;border-radius:8px;border:1px solid var(--card-border);" />
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4;">Diagonal = correct predictions. Most confusion is between adjacent classes (Medium↔High, Medium↔Low) — rarely Low↔High.</div>
     </div>
 
     <!-- Right: sample output + justification -->
