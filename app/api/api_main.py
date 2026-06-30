@@ -8,10 +8,12 @@ import pickle
 import logging
 from typing import Dict, List
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.layers import TextVectorization
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -21,8 +23,9 @@ from pydantic import BaseModel, Field
 # ============================================================================
 
 # Paths (update these to match your repo structure)
-MODEL_PATH = "models/ticket_classifier_tuned.keras"
-TOKENIZER_PATH = "data/processed/tokenizer.pkl"
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+MODEL_PATH = str(BASE_DIR / "models" / "ticket_classifier.keras")
+TOKENIZER_PATH = str(BASE_DIR / "data" / "processed" / "vocab.pkl")
 
 # Model hyperparameters (must match training)
 MAX_SEQ_LEN = 57
@@ -87,7 +90,10 @@ async def lifespan(app: FastAPI):
         
         logger.info(f"Loading tokenizer from {TOKENIZER_PATH}...")
         with open(TOKENIZER_PATH, 'rb') as f:
-            app_state.tokenizer = pickle.load(f)
+            vocab = pickle.load(f)
+            
+        app_state.tokenizer = TextVectorization(output_mode='int')
+        app_state.tokenizer.set_vocabulary(vocab)
         logger.info("✅ Tokenizer loaded successfully")
         
         app_state.model_loaded = True
@@ -206,14 +212,10 @@ def tokenize_and_pad(text: str) -> np.ndarray:
         Padded sequence array of shape (1, MAX_SEQ_LEN)
     """
     # Tokenize
-    sequences = app_state.tokenizer.texts_to_sequences([text])
-    
-    # Handle case where text contains no known words (empty sequence)
-    if not sequences or len(sequences[0]) == 0:
-        sequences = [[0]]  # Fallback to padding
+    sequences = app_state.tokenizer([text])
     
     # Pad to MAX_SEQ_LEN
-    padded = pad_sequences(sequences, maxlen=MAX_SEQ_LEN, padding='post')
+    padded = pad_sequences(sequences.numpy(), maxlen=MAX_SEQ_LEN, padding='pre', truncating='post')
     
     return padded
 

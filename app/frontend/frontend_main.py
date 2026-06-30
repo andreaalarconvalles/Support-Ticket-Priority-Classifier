@@ -138,28 +138,12 @@ def main():
     st.markdown("### Classify a Ticket")
     
     # Input fields
-    col1, col2 = st.columns([1, 1])
-    
-    with col1:
-        subject = st.text_input(
-            label="Subject",
-            placeholder="e.g., Cannot login to account",
-            max_chars=200,
-            help="Brief subject line of the ticket"
-        )
-    
-    with col2:
-        ticket_type = st.selectbox(
-            label="Ticket Type",
-            options=[
-                "Technical issue",
-                "Billing inquiry",
-                "Refund request",
-                "Cancellation request",
-                "Product inquiry"
-            ],
-            help="Category of the ticket (for department routing)"
-        )
+    subject = st.text_input(
+        label="Subject",
+        placeholder="e.g., Cannot login to account",
+        max_chars=200,
+        help="Brief subject line of the ticket"
+    )
     
     body = st.text_area(
         label="Ticket Description",
@@ -209,8 +193,8 @@ def main():
                 confidence_max = max(result["confidence"].values())
                 department = result["department"]
                 
-                # Three-column layout for main metrics
-                col1, col2, col3 = st.columns(3, gap="large")
+                # Two-column layout for main metrics
+                col1, col2 = st.columns(2, gap="large")
                 
                 with col1:
                     st.metric(
@@ -225,12 +209,6 @@ def main():
                         value=f"{confidence_max*100:.1f}%"
                     )
                 
-                with col3:
-                    st.metric(
-                        label="Department",
-                        value=department
-                    )
-                
                 # Confidence breakdown
                 st.markdown("#### Confidence Breakdown")
                 confidence_data = result["confidence"]
@@ -240,13 +218,13 @@ def main():
                 
                 with col_left:
                     st.markdown("**Priority Level**")
-                    for level in ["Critical", "High", "Medium", "Low"]:
+                    for level in ["High", "Medium", "Low"]:
                         pct = confidence_data.get(level, 0)
                         st.markdown(f"- {level}")
                 
                 with col_right:
                     st.markdown("**Score**")
-                    for level in ["Critical", "High", "Medium", "Low"]:
+                    for level in ["High", "Medium", "Low"]:
                         pct = confidence_data.get(level, 0)
                         bar_length = int(pct * 30)
                         bar = "█" * bar_length + "░" * (30 - bar_length)
@@ -279,8 +257,8 @@ def main():
         priorities = [t["priority"] for t in history]
         
         col1.metric("Total Classified", len(history))
-        col2.metric("Critical", priorities.count("Critical"))
-        col3.metric("High", priorities.count("High"))
+        col2.metric("High", priorities.count("High"))
+        col3.metric("Medium", priorities.count("Medium"))
         col4.metric("Avg Confidence", f"{sum(max(t['confidence'].values()) for t in history) / len(history) * 100:.0f}%")
         
         st.markdown("#### Recent Classifications")
@@ -292,7 +270,6 @@ def main():
             ):
                 st.markdown(f"**Subject:** {ticket['subject']}")
                 st.markdown(f"**Priority:** {ticket['priority']}")
-                st.markdown(f"**Department:** {ticket['department']}")
                 st.markdown(f"**Confidence:** {format_confidence(ticket['confidence'])}")
         
         # Clear history button
