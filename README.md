@@ -2,7 +2,7 @@
 
 IE University · Deep Learning A · Final Project (June 2026)
 
-A deep learning MVP that automatically classifies incoming customer support tickets into priority tiers (**Low, Medium, High, Critical**) and routes them to the correct support department, so non-technical agents get an instant triage call instead of doing it by hand.
+A deep learning MVP that automatically classifies incoming customer support tickets into priority tiers (**Low, Medium, High**) and routes them to the correct support department, so non-technical agents get an instant triage call instead of doing it by hand.
 
 ## Architecture
 
@@ -12,17 +12,17 @@ A deep learning MVP that automatically classifies incoming customer support tick
 | Department routing | Plain lookup from `Ticket Type` (see `src/utils/department_mapping.py`) — not a model output, since `Ticket Type` is already known per ticket |
 | Backend serving | FastAPI `/predict` endpoint |
 | Frontend | Streamlit app (Customer Support Email interface: Subject + Body) |
-| Dataset | [Customer Support Ticket Dataset](https://www.kaggle.com/datasets/muqaddasejaz/customer-support-ticket-dataset) (Kaggle) — 8,469 tickets, balanced across 4 priority classes |
+| Dataset | [Multilingual Customer Support Tickets](https://www.kaggle.com/datasets/tobiasbueck/multilingual-customer-support-tickets) (Kaggle) — 28,587 tickets (EN/DE), filtered to **16,338 English tickets** across 3 priority classes |
 
-> Note: the original project brief referenced a different 50K-row Kaggle dataset. The team switched to the dataset above since it already matches the required schema (ticket text + 4-class priority) and is cleanly balanced.
+> Note: the team switched datasets again after the original 8,469-ticket, 4-class version — this new dataset is bilingual and larger, but only has 3 priority classes (no "Critical") and is class-imbalanced rather than balanced.
 
 ## Key data findings (from EDA)
 
-- Priority classes are well balanced (~2,000–2,200 tickets each) — no resampling needed.
-- 95th-percentile description length is **57 words** → use this for `MAX_SEQ_LEN`.
-- **100% of descriptions** contain at least one unfilled `{placeholder}` token (this dataset is template-generated). `src/data/preprocessing.py` fills `product_purchased` with the real product name and strips everything else (no real value to substitute, including malformed/unmatched braces).
-- ~4.6% exact-duplicate descriptions in the *raw* text, but most of those were rows where the literal `{product_purchased}` token matched across different products — once cleaned (real product name filled in), only 73 true duplicates remain (0.9%). `preprocessing.py` dedupes on the cleaned text before splitting, so no duplicate spans train/val/test.
-- No `department` column exists; resolved as a `Ticket Type` → department lookup (see table below), not a second model output.
+- Raw dataset is bilingual (English/German); filtered to **English only** → 16,338 of 28,587 rows.
+- Priority classes are **imbalanced**: Low 21% (3,374), Medium 41% (6,618), High 39% (6,346) — `src/models/train_classifier.py` computes balanced class weights to compensate.
+- `MAX_SEQ_LEN` is fixed at **57** (carried over from the prior dataset's config — not re-derived from this dataset's length distribution).
+- No duplicate `full_text` (Subject + Body) rows remain after filtering to English — `preprocessing.py` still dedupes before splitting as a safety check.
+- No `department` column exists in the new dataset's used fields; resolved as a `Ticket Type` → department lookup (see table below). Note: the raw CSV's `queue` column already contains department-like categories (e.g. "Technical Support", "Billing and Payments") that the current lookup doesn't use yet — worth revisiting.
 
 See `notebooks/01_eda.ipynb` for the full analysis with charts.
 
@@ -69,11 +69,11 @@ Run `python src/data/preprocessing.py` to regenerate `data/processed/`. Key numb
 
 | | |
 |---|---|
-| `VOCAB_SIZE` | 5,968 |
+| `VOCAB_SIZE` | 5,726 |
 | `MAX_SEQ_LEN` | 57 |
-| `NUM_CLASSES` | 4 |
-| `LABEL_TO_ID` | `{"Low": 0, "Medium": 1, "High": 2, "Critical": 3}` |
-| Split | 70/15/15, stratified by `Ticket Priority`, `random_state=42` |
+| `NUM_CLASSES` | 3 |
+| `LABEL_TO_ID` | `{"low": 0, "medium": 1, "high": 2}` |
+| Split | 70/15/15, stratified by `priority`, `random_state=42` (11,436 / 2,451 / 2,451) |
 
 ## Setup
 
@@ -95,8 +95,8 @@ Fixed on Day 1 so backend and frontend can be built in parallel:
 
 ```json
 {
-  "priority": "Critical",
-  "confidence": {"Low": 0.02, "Medium": 0.05, "High": 0.11, "Critical": 0.82},
+  "priority": "High",
+  "confidence": {"Low": 0.05, "Medium": 0.17, "High": 0.78},
   "department": "Technical Support"
 }
 ```
